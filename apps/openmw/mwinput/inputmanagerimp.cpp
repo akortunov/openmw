@@ -169,7 +169,7 @@ namespace MWInput
                                 A_ToggleSpell, A_Rest, A_QuickKey1, A_QuickKey2,
                                 A_QuickKey3, A_QuickKey4, A_QuickKey5, A_QuickKey6,
                                 A_QuickKey7, A_QuickKey8, A_QuickKey9, A_QuickKey10,
-                                A_Use, A_Journal};
+                                A_Use, A_Journal, A_ToggleMap};
 
         for(size_t i = 0; i < sizeof(playerChannels)/sizeof(playerChannels[0]); i++) {
             int pc = playerChannels[i];
@@ -271,6 +271,9 @@ namespace MWInput
                 break;
             case A_Inventory:
                 toggleInventory ();
+                break;
+            case A_ToggleMap:
+                toggleMap ();
                 break;
             case A_Console:
                 toggleConsole ();
@@ -1081,6 +1084,17 @@ namespace MWInput
         // .. but don't touch any other mode, except container.
     }
 
+    void InputManager::toggleMap()
+    {
+        if (!mControlSwitch["playercontrols"])
+            return;
+
+        if (MyGUI::InputManager::getInstance ().isModalAny())
+            return;
+
+        MWBase::Environment::get().getWindowManager()->toggleMap();
+    }
+
     void InputManager::toggleConsole()
     {
         if (MyGUI::InputManager::getInstance ().isModalAny())
@@ -1224,6 +1238,7 @@ namespace MWInput
         defaultKeyBindings[A_CycleSpellRight] = SDL_SCANCODE_EQUALS;
         defaultKeyBindings[A_CycleWeaponLeft] = SDL_SCANCODE_LEFTBRACKET;
         defaultKeyBindings[A_CycleWeaponRight] = SDL_SCANCODE_RIGHTBRACKET;
+        defaultKeyBindings[A_ToggleMap] = SDL_SCANCODE_M;
 
         defaultKeyBindings[A_QuickKeysMenu] = SDL_SCANCODE_F1;
         defaultKeyBindings[A_Console] = SDL_SCANCODE_GRAVE;
@@ -1381,6 +1396,9 @@ namespace MWInput
         if (action == A_Screenshot)
             return "Screenshot";
 
+        if (action == A_ToggleMap)
+            return "Local/world map switching";
+
         descriptions[A_Use] = "sUse";
         descriptions[A_Activate] = "sActivate";
         descriptions[A_MoveBackward] = "sBack";
@@ -1536,6 +1554,7 @@ namespace MWInput
         ret.push_back(A_AutoMove);
         ret.push_back(A_Jump);
         ret.push_back(A_Inventory);
+        ret.push_back(A_ToggleMap);
         ret.push_back(A_Journal);
         ret.push_back(A_Rest);
         ret.push_back(A_Console);
@@ -1568,6 +1587,7 @@ namespace MWInput
         ret.push_back(A_AutoMove);
         ret.push_back(A_Jump);
         ret.push_back(A_Inventory);
+        ret.push_back(A_ToggleMap);
         ret.push_back(A_Journal);
         ret.push_back(A_Rest);
         ret.push_back(A_QuickSave);

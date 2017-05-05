@@ -306,6 +306,8 @@ namespace MWGui
     virtual bool getPlayerSleeping();
     virtual void wakeUpPlayer();
 
+    virtual void toggleMap();
+
     virtual void updatePlayer();
 
     virtual void showSoulgemDialog (MWWorld::Ptr item);

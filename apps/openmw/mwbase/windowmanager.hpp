@@ -277,6 +277,7 @@ namespace MWBase
 
             virtual bool getPlayerSleeping() = 0;
             virtual void wakeUpPlayer() = 0;
+            virtual void toggleMap() = 0;
 
             virtual void showSoulgemDialog (MWWorld::Ptr item) = 0;
 
