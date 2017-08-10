@@ -55,10 +55,10 @@ namespace MWMechanics
 
     bool Pickpocket::pick(MWWorld::Ptr item, int count)
     {
-        float stackValue = static_cast<float>(item.getClass().getValue(item) * count);
+        float stackValue = static_cast<float>(item.getClass().getWeight(item) * count);
         float fPickPocketMod = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>()
                 .find("fPickPocketMod")->getFloat();
-        float valueTerm = 10 * fPickPocketMod * stackValue;
+        float valueTerm = 30 * fPickPocketMod * stackValue;
 
         return getDetected(valueTerm);
     }
