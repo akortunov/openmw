@@ -28,6 +28,9 @@ namespace MWMechanics
         if (type != -1 && weapon->mData.mType != type)
             return 0.f;
 
+        if (enemy.isEmpty())
+                return 0.f;
+
         float rating=0.f;
         float bonus=0.f;
 
@@ -35,9 +38,6 @@ namespace MWMechanics
         {
             // Range weapon is useless under water
             if (MWBase::Environment::get().getWorld()->isUnderwater(MWWorld::ConstPtr(actor), 0.75f))
-                return 0.f;
-
-            if (enemy.isEmpty())
                 return 0.f;
 
             if (MWBase::Environment::get().getWorld()->isUnderwater(MWWorld::ConstPtr(enemy), 0.75f))
@@ -102,7 +102,11 @@ namespace MWMechanics
 
         int skill = item.getClass().getEquipmentSkill(item);
         if (skill != -1)
-            rating *= actor.getClass().getSkill(actor, skill) / 100.f;
+        {
+            // take in account probability to hit an enemy
+            int skillValue = actor.getClass().getSkill(actor, skill);
+            rating *= getHitChance(actor, enemy, skillValue) / 100.f;
+        }
 
         // There is no need to apply bonus if weapon rating == 0
         if (rating == 0.f)
