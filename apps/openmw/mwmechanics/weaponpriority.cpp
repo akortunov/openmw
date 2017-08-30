@@ -66,12 +66,9 @@ namespace MWMechanics
             MWMechanics::resistNormalWeapon(enemy, actor, item, rating);
         }
 
-        if (item.getClass().hasItemHealth(item))
-        {
-            if (item.getClass().getItemHealth(item) == 0)
-                return 0.f;
-            rating *= item.getClass().getItemHealth(item) / float(item.getClass().getItemMaxHealth(item));
-        }
+        // take in account weapon condition and Strength damage bonus
+        // looks like both melee and range weapons have this bonus
+        adjustWeaponDamage(rating, item, actor);
 
         if (weapon->mData.mType == ESM::Weapon::MarksmanBow)
         {
