@@ -46,6 +46,8 @@ namespace MWMechanics
             bonus = 1.5f;
         }
 
+        // First of all we need to calculate mean damage.
+        // Since AI can have different chance of each attack type, we will calculate mean damage as weighted arithmetic mean.
         if (weapon->mData.mType >= ESM::Weapon::MarksmanBow)
         {
             rating = (weapon->mData.mChop[0] + weapon->mData.mChop[1]) / 2.f;
@@ -55,13 +57,15 @@ namespace MWMechanics
         }
         else
         {
-            for (int i=0; i<2; ++i)
-            {
-                rating += weapon->mData.mSlash[i];
-                rating += weapon->mData.mThrust[i];
-                rating += weapon->mData.mChop[i];
-            }
-            rating /= 6.f;
+            float slash = (weapon->mData.mSlash[0] + weapon->mData.mSlash[1]) / 2.f;
+            float chop = (weapon->mData.mChop[0] + weapon->mData.mChop[1]) / 2.f;
+            float thrust = (weapon->mData.mThrust[0] + weapon->mData.mThrust[1]) / 2.f;
+
+            float slashChance = slash / (slash + chop + thrust);
+            float chopChance = chop / (slash + chop + thrust);
+            float thrustChance = thrust / (slash + chop + thrust);
+
+            rating = slash * slashChance + chop * chopChance + thrust * thrustChance;
 
             MWMechanics::resistNormalWeapon(enemy, actor, item, rating);
         }
