@@ -32,7 +32,7 @@ namespace MWMechanics
                 return 0.f;
 
         float rating=0.f;
-        float bonus=0.f;
+        float bonus=1.f;
 
         if (weapon->mData.mType >= ESM::Weapon::MarksmanBow && weapon->mData.mType <= ESM::Weapon::MarksmanThrown)
         {
@@ -43,7 +43,7 @@ namespace MWMechanics
             if (MWBase::Environment::get().getWorld()->isUnderwater(MWWorld::ConstPtr(enemy), 0.75f))
                 return 0.f;
 
-            bonus+=1.5f;
+            bonus = 1.5f;
         }
 
         if (weapon->mData.mType >= ESM::Weapon::MarksmanBow)
@@ -105,11 +105,7 @@ namespace MWMechanics
             rating *= getHitChance(actor, enemy, skillValue) / 100.f;
         }
 
-        // There is no need to apply bonus if weapon rating == 0
-        if (rating == 0.f)
-            return 0.f;
-
-        return rating + bonus;
+        return rating * bonus;
     }
 
     float vanillaRateWeaponAndAmmo(const MWWorld::Ptr& weapon, const MWWorld::Ptr& ammo, const MWWorld::Ptr& actor, const MWWorld::Ptr& enemy)
