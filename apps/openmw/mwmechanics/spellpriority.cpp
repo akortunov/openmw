@@ -388,7 +388,7 @@ namespace MWMechanics
             if (diff <= 0)
                 return 0.f;
 
-            rating *= (diff) / 5.f;
+            rating *= (diff) / 3.f;
 
             break;
         }
