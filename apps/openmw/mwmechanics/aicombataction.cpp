@@ -71,6 +71,8 @@ namespace MWMechanics
     {
         const ESM::Enchantment* enchantment = MWBase::Environment::get().getWorld()->getStore().get<ESM::Enchantment>().find(mItem->getClass().getEnchantment(*mItem));
         int types = getRangeTypes(enchantment->mEffects);
+
+        isRanged = (types & RangeTypes::Target) | (types & RangeTypes::Self);
         return suggestCombatRange(types);
     }
 
@@ -113,6 +115,7 @@ namespace MWMechanics
         isRanged = false;
 
         static const float fCombatDistance = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>().find("fCombatDistance")->getFloat();
+        static const float fProjectileMaxSpeed = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>().find("fProjectileMaxSpeed")->getFloat();
 
         if (mWeapon.isEmpty())
         {
@@ -126,7 +129,7 @@ namespace MWMechanics
         if (weapon->mData.mType >= ESM::Weapon::MarksmanBow)
         {
             isRanged = true;
-            return 1000.f;
+            return fProjectileMaxSpeed;
         }
         else
             return weapon->mData.mReach * fCombatDistance;
