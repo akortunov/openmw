@@ -81,8 +81,33 @@ namespace MWGui
 
     bool PickpocketItemModel::onDropItem(const MWWorld::Ptr &item, int count)
     {
-        // don't allow "reverse pickpocket" (it will be handled by scripts after 1.0)
-        return false;
+        // check that we don't exceed inventory encumberance
+        float weight = item.getClass().getWeight(item) * count;
+        if (mActor.getClass().getCapacity(mActor) < mActor.getClass().getEncumbrance(mActor) + weight)
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{sContentsMessage3}");
+            return false;
+        }
+
+        // a player can not get rid of bound item
+        if (MWBase::Environment::get().getMechanicsManager()->isBoundItem(item))
+        {
+            MWBase::Environment::get().getWindowManager()->messageBox("#{sBarterDialog12}");
+            return false;
+        }
+
+        if (mActor.getClass().getCreatureStats(mActor).getKnockedDown())
+            return true;
+
+        // reverse pickpocketing
+        bool success = stealItem(item, count);
+        if (success)
+        {
+            MWWorld::Ptr player = MWMechanics::getPlayer();
+            MWBase::Environment::get().getMechanicsManager()->itemTaken(player, item, mActor, -count, false);
+        }
+
+        return success;
     }
 
     void PickpocketItemModel::onClose()

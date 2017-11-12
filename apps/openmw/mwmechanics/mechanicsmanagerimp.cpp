@@ -1111,7 +1111,12 @@ namespace MWMechanics
         Misc::StringUtils::lowerCaseInPlace(owner.first);
 
         if (!Misc::StringUtils::ciEqual(item.getCellRef().getRefId(), MWWorld::ContainerStore::sGoldId))
-            mStolenItems[Misc::StringUtils::lowerCase(item.getCellRef().getRefId())][owner] += count;
+        {
+            std::string id = Misc::StringUtils::lowerCase(item.getCellRef().getRefId());
+            mStolenItems[id][owner] += count;
+            if (mStolenItems[id][owner] <= 0)
+                mStolenItems[id].erase(owner);
+        }
 
         if (alarm)
             commitCrime(ptr, victim, OT_Theft, item.getClass().getValue(item) * count);
