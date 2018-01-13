@@ -223,7 +223,7 @@ namespace MWWorld
         return false;
     }
 
-    float Class::getArmorRating (const MWWorld::Ptr& ptr) const
+    float Class::getArmorRating (const MWWorld::Ptr& ptr, int slot) const
     {
         throw std::runtime_error("Class does not support armor rating");
     }

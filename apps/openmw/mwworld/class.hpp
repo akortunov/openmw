@@ -8,6 +8,8 @@
 
 #include "ptr.hpp"
 
+#include "../mwworld/inventorystore.hpp"
+
 namespace ESM
 {
     struct ObjectState;
@@ -247,8 +249,8 @@ namespace MWWorld
             virtual std::string getSoundIdFromSndGen(const Ptr &ptr, const std::string &type) const;
             ///< Returns the sound ID for \a ptr of the given soundgen \a type.
 
-            virtual float getArmorRating (const MWWorld::Ptr& ptr) const;
-            ///< @return combined armor rating of this actor
+            virtual float getArmorRating (const MWWorld::Ptr& ptr, int slot=MWWorld::InventoryStore::Slot_NoSlot) const;
+            ///< @return combined armor rating of this actor, if slot == Slot_NoSlot. Otherwise get armor rating for given slot.
 
             virtual std::string getInventoryIcon (const MWWorld::ConstPtr& ptr) const;
             ///< Return name of inventory icon.

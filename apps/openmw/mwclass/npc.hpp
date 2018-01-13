@@ -3,6 +3,8 @@
 
 #include "actor.hpp"
 
+#include "../mwworld/inventorystore.hpp"
+
 namespace ESM
 {
     struct GameSetting;
@@ -41,6 +43,8 @@ namespace MWClass
             };
 
             static const GMST& getGmst();
+
+            int getHitPart(const MWWorld::Ptr& target, const osg::Vec3f& hitPosition) const;
 
         public:
 
@@ -102,8 +106,8 @@ namespace MWClass
             ///< Returns total weight of objects inside this object (including modifications from magic
             /// effects). Throws an exception, if the object can't hold other objects.
 
-            virtual float getArmorRating (const MWWorld::Ptr& ptr) const;
-            ///< @return combined armor rating of this actor
+            virtual float getArmorRating (const MWWorld::Ptr& ptr, int slot=MWWorld::InventoryStore::Slot_NoSlot) const;
+            ///< @return combined armor rating of this actor, if slot == Slot_NoSlot. Otherwise get armor rating for given slot.
 
             virtual bool apply (const MWWorld::Ptr& ptr, const std::string& id,
                 const MWWorld::Ptr& actor) const;

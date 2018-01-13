@@ -417,6 +417,33 @@ namespace MWGui
             + MyGUI::utility::toString(static_cast<int>(mPtr.getClass().getArmorRating(mPtr))));
         if (mArmorRating->getTextSize().width > mArmorRating->getSize().width)
             mArmorRating->setCaptionWithReplacing (MyGUI::utility::toString(static_cast<int>(mPtr.getClass().getArmorRating(mPtr))));
+
+        std::stringstream tooltip;
+
+        static const std::vector<std::pair<std::string, int>> sMapping =
+        {
+            std::make_pair(std::string("Head"), MWWorld::InventoryStore::Slot_Helmet),
+            std::make_pair(std::string("Chest"), MWWorld::InventoryStore::Slot_Cuirass),
+            std::make_pair(std::string("Left shoulder"), MWWorld::InventoryStore::Slot_LeftPauldron),
+            std::make_pair(std::string("Right shoulder"), MWWorld::InventoryStore::Slot_RightPauldron),
+            std::make_pair(std::string("Groin"), MWWorld::InventoryStore::Slot_Greaves),
+            std::make_pair(std::string("Legs"), MWWorld::InventoryStore::Slot_Boots),
+            std::make_pair(std::string("Left arm"), MWWorld::InventoryStore::Slot_LeftGauntlet),
+            std::make_pair(std::string("Right arm"), MWWorld::InventoryStore::Slot_RightGauntlet),
+            std::make_pair(std::string("Shield"), MWWorld::InventoryStore::Slot_CarriedLeft)
+        };
+
+        for (unsigned int i = 0; i < sMapping.size(); i++)
+        {
+            int slotRating = mPtr.getClass().getArmorRating(mPtr, sMapping[i].second);
+
+            tooltip << sMapping[i].first << ": " << slotRating << std::endl;
+        }
+
+        int totalArmor = mPtr.getClass().getArmorRating(mPtr);
+        tooltip << "Mean value: " << totalArmor;
+
+        mArmorRating->setUserString("Caption_Text", tooltip.str());
     }
 
     void InventoryWindow::updatePreviewSize()

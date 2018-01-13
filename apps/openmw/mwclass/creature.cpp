@@ -601,7 +601,7 @@ namespace MWClass
         return info;
     }
 
-    float Creature::getArmorRating (const MWWorld::Ptr& ptr) const
+    float Creature::getArmorRating (const MWWorld::Ptr& ptr, int slot) const
     {
         // Note this is currently unused. Creatures do not use armor mitigation.
         return getCreatureStats(ptr).getMagicEffects().get(ESM::MagicEffect::Shield).getMagnitude();

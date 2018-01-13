@@ -3,6 +3,8 @@
 
 #include "actor.hpp"
 
+#include "../mwworld/inventorystore.hpp"
+
 namespace ESM
 {
     struct GameSetting;
@@ -80,8 +82,8 @@ namespace MWClass
             ///< Return total weight that fits into the object. Throws an exception, if the object can't
             /// hold other objects.
 
-            virtual float getArmorRating (const MWWorld::Ptr& ptr) const;
-            ///< @return combined armor rating of this actor
+            virtual float getArmorRating (const MWWorld::Ptr& ptr, int slot=MWWorld::InventoryStore::Slot_NoSlot) const;
+            ///< @return combined armor rating of this actor, if slot == Slot_NoSlot. Otherwise get armor rating for given slot.
 
             virtual bool isEssential (const MWWorld::ConstPtr& ptr) const;
             ///< Is \a ptr essential? (i.e. may losing \a ptr make the game unwinnable)

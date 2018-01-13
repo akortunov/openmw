@@ -20,18 +20,12 @@
 #include "difficultyscaling.hpp"
 #include "actorutil.hpp"
 
-namespace
-{
-
-float signedAngleRadians (const osg::Vec3f& v1, const osg::Vec3f& v2, const osg::Vec3f& normal)
-{
-    return std::atan2((normal * (v1 ^ v2)), (v1 * v2));
-}
-
-}
-
 namespace MWMechanics
 {
+    float signedAngleRadians (const osg::Vec3f& v1, const osg::Vec3f& v2, const osg::Vec3f& normal)
+    {
+        return std::atan2((normal * (v1 ^ v2)), (v1 * v2));
+    }
 
     bool applyOnStrikeEnchantment(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, const MWWorld::Ptr& object, const osg::Vec3f& hitPosition, const bool fromProjectile)
     {

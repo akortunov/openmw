@@ -7,6 +7,7 @@
 #include <components/esm/loadmgef.hpp>
 #include <components/esm/loadnpc.hpp>
 #include <components/esm/npcstate.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/settings/settings.hpp>
 
 #include "../mwbase/environment.hpp"
@@ -738,37 +739,12 @@ namespace MWClass
             if (Misc::Rng::roll0to99() < chance)
                 MWBase::Environment::get().getDialogueManager()->say(ptr, "hit");
 
-            // Check for knockdown
-            float agilityTerm = stats.getAttribute(ESM::Attribute::Agility).getModified() * gmst.fKnockDownMult->getFloat();
-            float knockdownTerm = stats.getAttribute(ESM::Attribute::Agility).getModified()
-                    * gmst.iKnockDownOddsMult->getInt() * 0.01f + gmst.iKnockDownOddsBase->getInt();
-            if (ishealth && agilityTerm <= damage && knockdownTerm <= Misc::Rng::roll0to99())
-                stats.setKnockedDown(true);
-            else
-                stats.setHitRecovery(true); // Is this supposed to always occur?
-
             if (damage > 0 && ishealth)
             {
-                // Hit percentages:
-                // cuirass = 30%
-                // shield, helmet, greaves, boots, pauldrons = 10% each
-                // guantlets = 5% each
-                static const int hitslots[20] = {
-                    MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
-                    MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
-                    MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
-                    MWWorld::InventoryStore::Slot_CarriedLeft, MWWorld::InventoryStore::Slot_CarriedLeft,
-                    MWWorld::InventoryStore::Slot_Helmet, MWWorld::InventoryStore::Slot_Helmet,
-                    MWWorld::InventoryStore::Slot_Greaves, MWWorld::InventoryStore::Slot_Greaves,
-                    MWWorld::InventoryStore::Slot_Boots, MWWorld::InventoryStore::Slot_Boots,
-                    MWWorld::InventoryStore::Slot_LeftPauldron, MWWorld::InventoryStore::Slot_LeftPauldron,
-                    MWWorld::InventoryStore::Slot_RightPauldron, MWWorld::InventoryStore::Slot_RightPauldron,
-                    MWWorld::InventoryStore::Slot_LeftGauntlet, MWWorld::InventoryStore::Slot_RightGauntlet
-                };
-                int hitslot = hitslots[Misc::Rng::rollDice(20)];
+                int hitslot = getHitPart(ptr, hitPosition);
 
                 float unmitigatedDamage = damage;
-                float x = damage / (damage + getArmorRating(ptr));
+                float x = damage / (damage + getArmorRating(ptr, hitslot));
                 damage *= std::max(gmst.fCombatArmorMinMult->getFloat(), x);
                 int damageDiff = static_cast<int>(unmitigatedDamage - damage);
                 if (damage < 1)
@@ -807,6 +783,15 @@ namespace MWClass
                 else if(ptr == MWMechanics::getPlayer())
                     skillUsageSucceeded(ptr, ESM::Skill::Unarmored, 0);
             }
+
+            // Check for knockdown
+            float agilityTerm = stats.getAttribute(ESM::Attribute::Agility).getModified() * gmst.fKnockDownMult->getFloat();
+            float knockdownTerm = stats.getAttribute(ESM::Attribute::Agility).getModified()
+                    * gmst.iKnockDownOddsMult->getInt() * 0.01f + gmst.iKnockDownOddsBase->getInt();
+            if (ishealth && agilityTerm <= damage && knockdownTerm <= Misc::Rng::roll0to99())
+                stats.setKnockedDown(true);
+            else
+                stats.setHitRecovery(true); // Is this supposed to always occur?
         }
 
         if (ishealth)
@@ -894,6 +879,93 @@ namespace MWClass
             return std::shared_ptr<MWWorld::Action> (new MWWorld::FailedAction(""));
 
         return std::shared_ptr<MWWorld::Action>(new MWWorld::ActionTalk(ptr));
+    }
+
+    int Npc::getHitPart(const MWWorld::Ptr& target, const osg::Vec3f& hitPosition) const
+    {
+        const MWMechanics::CreatureStats& stats = target.getClass().getCreatureStats(target);
+
+        // Since we do not modify the hitbox for unconscious actors, hit the random part
+        if (!stats.getKnockedDown())
+        {
+            osg::Vec3f pos = target.getRefData().getPosition().asVec3();
+            osg::Vec3f offset = MWBase::Environment::get().getWorld()->getHalfExtents(target);
+            offset[2] *= 2;
+            osg::Vec3f hitOffset = hitPosition - pos;
+
+            osg::Vec3f leftToRightDirection = target.getRefData().getBaseNode()->getAttitude() * osg::Vec3f(1,0,0);
+            float angleDegrees = osg::RadiansToDegrees(MWMechanics::signedAngleRadians(-hitOffset, leftToRightDirection, osg::Vec3f(0,0,1)));
+
+            if (hitOffset.z() >= offset.z()*0.85f)
+            {
+                MWBase::Environment::get().getWindowManager()->messageBox("Head");
+                return MWWorld::InventoryStore::Slot_Helmet;
+            }
+            else if (hitOffset.z() >= offset.z()*0.6f && hitOffset.z() < offset.z()*0.85f)
+            {
+                if (hitOffset.z() <= offset.z()*0.8f)
+                {
+                    if (angleDegrees >= -45 && angleDegrees <= 45)
+                    {
+                        MWBase::Environment::get().getWindowManager()->messageBox("Left Pauldron");
+                        return MWWorld::InventoryStore::Slot_LeftPauldron;
+                    }
+
+                    if (angleDegrees >= 135 || angleDegrees <= -135)
+                    {
+                        MWBase::Environment::get().getWindowManager()->messageBox("Right Pauldron");
+                        return MWWorld::InventoryStore::Slot_RightPauldron;
+                    }
+                }
+
+                MWBase::Environment::get().getWindowManager()->messageBox("Chest");
+                return MWWorld::InventoryStore::Slot_Cuirass;
+            }
+            else if (hitOffset.z() >= offset.z()*0.3f && hitOffset.z() < offset.z()*0.6f)
+            {
+                if (hitOffset.z() >= offset.z()*0.5f)
+                {
+                    if (angleDegrees >= -45 && angleDegrees <= 45)
+                    {
+                        MWBase::Environment::get().getWindowManager()->messageBox("Left Gauntlet");
+                        return MWWorld::InventoryStore::Slot_LeftGauntlet;
+                    }
+
+                    if (angleDegrees >= 135 || angleDegrees <= -135)
+                    {
+                        MWBase::Environment::get().getWindowManager()->messageBox("Right Gauntlet");
+                        return MWWorld::InventoryStore::Slot_RightGauntlet;
+                    }
+                }
+
+                MWBase::Environment::get().getWindowManager()->messageBox("Groin");
+                return MWWorld::InventoryStore::Slot_Greaves;
+            }
+            else if (hitOffset.z() < offset.z()*0.3f)
+            {
+                MWBase::Environment::get().getWindowManager()->messageBox("Boots");
+                return MWWorld::InventoryStore::Slot_Boots;
+            }
+        }
+
+        // Hit percentages:
+        // cuirass = 30%
+        // shield, helmet, greaves, boots, pauldrons = 10% each
+        // guantlets = 5% each
+        static const int hitslots[20] = {
+            MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
+            MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
+            MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
+            MWWorld::InventoryStore::Slot_CarriedLeft, MWWorld::InventoryStore::Slot_CarriedLeft,
+            MWWorld::InventoryStore::Slot_Helmet, MWWorld::InventoryStore::Slot_Helmet,
+            MWWorld::InventoryStore::Slot_Greaves, MWWorld::InventoryStore::Slot_Greaves,
+            MWWorld::InventoryStore::Slot_Boots, MWWorld::InventoryStore::Slot_Boots,
+            MWWorld::InventoryStore::Slot_LeftPauldron, MWWorld::InventoryStore::Slot_LeftPauldron,
+            MWWorld::InventoryStore::Slot_RightPauldron, MWWorld::InventoryStore::Slot_RightPauldron,
+            MWWorld::InventoryStore::Slot_LeftGauntlet, MWWorld::InventoryStore::Slot_RightGauntlet
+        };
+        int hitslot = hitslots[Misc::Rng::rollDice(20)];
+        return hitslot;
     }
 
     MWWorld::ContainerStore& Npc::getContainerStore (const MWWorld::Ptr& ptr)
@@ -1105,7 +1177,7 @@ namespace MWClass
         stats.useSkill (skill, *class_, usageType, extraFactor);
     }
 
-    float Npc::getArmorRating (const MWWorld::Ptr& ptr) const
+    float Npc::getArmorRating (const MWWorld::Ptr& ptr, int slot) const
     {
         const MWBase::World *world = MWBase::Environment::get().getWorld();
         const MWWorld::Store<ESM::GameSetting> &store = world->getStore().get<ESM::GameSetting>();
@@ -1143,14 +1215,19 @@ namespace MWClass
 
         float shield = stats.getMagicEffects().get(ESM::MagicEffect::Shield).getMagnitude();
 
-        return ratings[MWWorld::InventoryStore::Slot_Cuirass] * 0.3f
-                + (ratings[MWWorld::InventoryStore::Slot_CarriedLeft] + ratings[MWWorld::InventoryStore::Slot_Helmet]
-                    + ratings[MWWorld::InventoryStore::Slot_Greaves] + ratings[MWWorld::InventoryStore::Slot_Boots]
-                    + ratings[MWWorld::InventoryStore::Slot_LeftPauldron] + ratings[MWWorld::InventoryStore::Slot_RightPauldron]
-                    ) * 0.1f
-                + (ratings[MWWorld::InventoryStore::Slot_LeftGauntlet] + ratings[MWWorld::InventoryStore::Slot_RightGauntlet])
-                    * 0.05f
-                + shield;
+        if (slot == MWWorld::InventoryStore::Slot_NoSlot)
+        {
+            return ratings[MWWorld::InventoryStore::Slot_Cuirass] * 0.3f
+                    + (ratings[MWWorld::InventoryStore::Slot_CarriedLeft] + ratings[MWWorld::InventoryStore::Slot_Helmet]
+                        + ratings[MWWorld::InventoryStore::Slot_Greaves] + ratings[MWWorld::InventoryStore::Slot_Boots]
+                        + ratings[MWWorld::InventoryStore::Slot_LeftPauldron] + ratings[MWWorld::InventoryStore::Slot_RightPauldron]
+                        ) * 0.1f
+                    + (ratings[MWWorld::InventoryStore::Slot_LeftGauntlet] + ratings[MWWorld::InventoryStore::Slot_RightGauntlet])
+                        * 0.05f
+                    + shield;
+        }
+
+        return ratings[slot] + shield;
     }
 
     void Npc::adjustScale(const MWWorld::ConstPtr &ptr, osg::Vec3f&scale, bool rendering) const

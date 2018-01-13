@@ -16,7 +16,8 @@
                     <UserString key="ToolTipType" value="AvatarItemSelection"/>
                 </Widget>
                 <Widget type="TextBox" skin="ProgressText" position="0 161 212 24" align="HStretch Bottom" name="ArmorRating">
-                    <Property key="NeedMouse" value="false"/>
+                    <UserString key="ToolTipType" value="Layout"/>
+                    <UserString key="ToolTipLayout" value="TextToolTip"/>
                 </Widget>
             </Widget>
 

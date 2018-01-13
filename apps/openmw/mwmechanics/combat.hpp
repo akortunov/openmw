@@ -40,6 +40,8 @@ void getHandToHandDamage (const MWWorld::Ptr& attacker, const MWWorld::Ptr& vict
 void applyFatigueLoss(const MWWorld::Ptr& attacker, const MWWorld::Ptr& weapon, float attackStrength);
 
 float getFightDistanceBias(const MWWorld::Ptr& actor1, const MWWorld::Ptr& actor2);
+
+float signedAngleRadians (const osg::Vec3f& v1, const osg::Vec3f& v2, const osg::Vec3f& normal);
 }
 
 #endif
