@@ -249,11 +249,20 @@ void MWWorld::InventoryStore::autoEquip (const MWWorld::Ptr& actor)
 {
     const MWBase::World *world = MWBase::Environment::get().getWorld();
     const MWWorld::Store<ESM::GameSetting> &store = world->getStore().get<ESM::GameSetting>();
-    MWMechanics::NpcStats& stats = actor.getClass().getNpcStats(actor);
+
+    int unarmoredSkill = 0;
+    if (actor.getClass().isNpc())
+    {
+        MWMechanics::NpcStats& stats = actor.getClass().getNpcStats(actor);
+        unarmoredSkill = stats.getSkill(ESM::Skill::Unarmored).getModified();
+    }
+    else
+    {
+        unarmoredSkill = actor.getClass().getSkill(actor, ESM::Skill::Unarmored);
+    }
 
     static float fUnarmoredBase1 = store.find("fUnarmoredBase1")->getFloat();
     static float fUnarmoredBase2 = store.find("fUnarmoredBase2")->getFloat();
-    int unarmoredSkill = stats.getSkill(ESM::Skill::Unarmored).getModified();
 
     float unarmoredRating = (fUnarmoredBase1 * unarmoredSkill) * (fUnarmoredBase2 * unarmoredSkill);
 
@@ -383,7 +392,16 @@ void MWWorld::InventoryStore::autoEquip (const MWWorld::Ptr& actor)
 
         for (int j = 0; j < static_cast<int>(weaponSkillsLength); ++j)
         {
-            int skillValue = stats.getSkill(static_cast<int>(weaponSkills[j])).getModified();
+            int skillValue = 0;
+            if (actor.getClass().isNpc())
+            {
+                MWMechanics::NpcStats& stats = actor.getClass().getNpcStats(actor);
+                skillValue = stats.getSkill(ESM::Skill::Unarmored).getModified();
+            }
+            else
+            {
+                skillValue = actor.getClass().getSkill(actor, ESM::Skill::Unarmored);
+            }
 
             if (skillValue > max && !weaponSkillVisited[j])
             {

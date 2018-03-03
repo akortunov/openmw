@@ -130,4 +130,13 @@ Makes player followers and escorters start combat with enemies who have started 
 Otherwise they wait for the enemies or the player to do an attack first.
 Please note this setting has not been extensively tested and could have side effects with certain quests.
 
+weapon sheathing
+----------------
+
+:Type:		boolean
+:Range:		True/False
+:Default:	False
+
+If this setting is true, OpenMW will render holstered weapons, if the player has assets (creatures models) with this feature support.
+Note: this feature also enables autoequipping for creatures.
 This setting can only be configured by editing the settings configuration file.

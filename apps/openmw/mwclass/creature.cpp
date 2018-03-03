@@ -165,7 +165,13 @@ namespace MWClass
             getContainerStore(ptr).fill(ref->mBase->mInventory, ptr.getCellRef().getRefId());
 
             if (hasInventory)
-                getInventoryStore(ptr).autoEquipShield(ptr);
+            {
+                bool weaponSheathing = Settings::Manager::getBool("weapon sheathing", "Game");
+                // we need a weapon autoequipping for weapon sheathing feature.
+                // Theoretically, it can affect bipedal creatures-traders from mods, so disable it if not needed.
+
+                weaponSheathing ? getInventoryStore(ptr).autoEquip(ptr) : getInventoryStore(ptr).autoEquipShield(ptr);
+            }
         }
     }
 

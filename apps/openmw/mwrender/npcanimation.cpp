@@ -927,6 +927,8 @@ void NpcAnimation::showWeapons(bool showWeapon)
         if (mPtr == MWMechanics::getPlayer())
             MWBase::Environment::get().getWorld()->getPlayer().setAttackingOrSpell(false);
     }
+
+    updateHolsteredWeapon(!mShowWeapons);
 }
 
 void NpcAnimation::showCarriedLeft(bool show)
