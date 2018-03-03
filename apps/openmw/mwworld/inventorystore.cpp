@@ -396,11 +396,11 @@ void MWWorld::InventoryStore::autoEquip (const MWWorld::Ptr& actor)
             if (actor.getClass().isNpc())
             {
                 MWMechanics::NpcStats& stats = actor.getClass().getNpcStats(actor);
-                skillValue = stats.getSkill(ESM::Skill::Unarmored).getModified();
+                skillValue = stats.getSkill(static_cast<int>(weaponSkills[j])).getModified();
             }
             else
             {
-                skillValue = actor.getClass().getSkill(actor, ESM::Skill::Unarmored);
+                skillValue = actor.getClass().getSkill(actor, static_cast<int>(weaponSkills[j]));
             }
 
             if (skillValue > max && !weaponSkillVisited[j])
