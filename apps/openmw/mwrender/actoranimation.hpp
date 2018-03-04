@@ -40,8 +40,9 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
 
     protected:
         bool mWeaponSheathing;
+        osg::Group* getHolsteredWeaponBone(std::string boneName);
         virtual void updateHolsteredWeapon(bool showHolsteredWeapons);
-        virtual std::string getHolsteredWeaponBone(const MWWorld::ConstPtr& weapon);
+        virtual std::string getHolsteredWeaponBoneName(const MWWorld::ConstPtr& weapon);
         virtual PartHolderPtr insertHolsteredWeapon(const std::string& model, const std::string& bonename,
                                         const std::string& bonefilter, bool enchantedGlow, osg::Vec4f* glowColor);
 
@@ -52,6 +53,7 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
         typedef std::map<MWWorld::ConstPtr, osg::ref_ptr<SceneUtil::LightSource> > ItemLightMap;
         ItemLightMap mItemLights;
         PartHolderPtr mHolsteredWeapon;
+        PartHolderPtr mScabbard;
 };
 
 }
