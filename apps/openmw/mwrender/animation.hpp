@@ -309,12 +309,15 @@ protected:
      */
     void setObjectRoot(const std::string &model, bool forceskeleton, bool baseonly, bool isCreature);
 
+    void loadAllAnimationsInFolder(const std::string &model, const std::string &baseModel);
+
     /** Adds the keyframe controllers in the specified model as a new animation source.
      * @note Later added animation sources have the highest priority when it comes to finding a particular animation.
      * @param model The file to add the keyframes for. Note that the .nif file extension will be replaced with .kf.
      * @param baseModel The filename of the mObjectRoot, only used for error messages.
     */
     void addAnimSource(const std::string &model, const std::string& baseModel);
+    void addSingleAnimSource(const std::string &model, const std::string& baseModel);
 
     /** Adds an additional light to the given node using the specified ESM record. */
     void addExtraLight(osg::ref_ptr<osg::Group> parent, const ESM::Light *light);
