@@ -131,3 +131,16 @@ Otherwise they wait for the enemies or the player to do an attack first.
 Please note this setting has not been extensively tested and could have side effects with certain quests.
 
 This setting can only be configured by editing the settings configuration file.
+
+use additional anim sources
+---------------------------
+
+:Type:		boolean
+:Range:		True/False
+:Default:	False
+
+Allow to load additional animation sources when enabled.
+For example, if the main animation mesh has name Meshes/x.nif, an engine will load all KF-files from Animations/x folder.
+Can be useful if you want to use several animation replacers without merging them.
+Attention: if you want to load per-group actor animations from AnimKit, you should remove beast nodes (toe and tail) from animations!
+This setting can only be configured by editing the settings configuration file.

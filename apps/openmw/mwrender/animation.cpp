@@ -32,6 +32,8 @@
 #include <components/sceneutil/skeleton.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 
+#include <components/settings/settings.hpp>
+
 #include <components/fallback/fallback.hpp>
 
 #include "../mwbase/environment.hpp"
@@ -467,6 +469,8 @@ namespace MWRender
             mAnimationTimePtr[i].reset(new AnimationTime);
 
         mLightListCallback = new SceneUtil::LightListCallback;
+
+        mUseAdditionalSources = Settings::Manager::getBool ("use additional anim sources", "Game");
     }
 
     Animation::~Animation()
@@ -573,7 +577,9 @@ namespace MWRender
             return;
 
         addSingleAnimSource(kfname, baseModel);
-        loadAllAnimationsInFolder(kfname, baseModel);
+
+        if (mUseAdditionalSources)
+            loadAllAnimationsInFolder(kfname, baseModel);
     }
 
     void Animation::addSingleAnimSource(const std::string &kfname, const std::string& baseModel)
