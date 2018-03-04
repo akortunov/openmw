@@ -70,7 +70,12 @@ namespace MWMechanics
         MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
         MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
         if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Armor).name())
-            return false;
+        {
+            // if there is no shield, try to block with weapon
+            shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
+                return false;
+        }
 
         if (!blocker.getRefData().getBaseNode())
             return false; // shouldn't happen

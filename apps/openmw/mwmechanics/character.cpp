@@ -305,13 +305,53 @@ void CharacterController::refreshHitRecoilAnims(CharacterState& idle)
                 }
             }
         }
-        else if (block && mAnimation->hasAnimation("shield"))
+        else if (block && mPtr.getClass().hasInventoryStore(mPtr))
         {
-            mHitState = CharState_Block;
-            mCurrentHit = "shield";
-            MWRender::Animation::AnimPriority priorityBlock (Priority_Hit);
-            priorityBlock[MWRender::Animation::BoneGroup_LeftArm] = Priority_Block;
-            mAnimation->play(mCurrentHit, priorityBlock, MWRender::Animation::BlendMask_All, true, 1, "block start", "block stop", 0.0f, 0);
+            std::string blockAnimName = "";
+            MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+            MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            if (shield != inv.end() && shield->getTypeName() == typeid(ESM::Armor).name())
+            {
+                blockAnimName = "shield";
+            }
+            else
+            {
+                MWWorld::ContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if (weapon != inv.end() && weapon->getTypeName() == typeid(ESM::Weapon).name())
+                {
+                    const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon->get<ESM::Weapon>();
+                    ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+                    switch(weaponType)
+                    {
+                        case ESM::Weapon::ShortBladeOneHand:
+                        case ESM::Weapon::LongBladeOneHand:
+                        case ESM::Weapon::BluntOneHand:
+                        case ESM::Weapon::AxeOneHand:
+                            blockAnimName = "block one handed";
+                            break;
+                        case ESM::Weapon::LongBladeTwoHand:
+                        case ESM::Weapon::BluntTwoClose:
+                        case ESM::Weapon::AxeTwoHand:
+                            blockAnimName = "block two close";
+                            break;
+                        case ESM::Weapon::BluntTwoWide:
+                        case ESM::Weapon::SpearTwoWide:
+                            blockAnimName = "block two wide";
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (!blockAnimName.empty() && mAnimation->hasAnimation(blockAnimName))
+            {
+                mHitState = CharState_Block;
+                mCurrentHit = blockAnimName;
+                MWRender::Animation::AnimPriority priorityBlock (Priority_Hit);
+                priorityBlock[MWRender::Animation::BoneGroup_LeftArm] = Priority_Block;
+                mAnimation->play(mCurrentHit, priorityBlock, MWRender::Animation::BlendMask_All, true, 1, "block start", "block stop", 0.0f, 0);
+            }
         }
 
         // Cancel upper body animations
@@ -1063,6 +1103,12 @@ void CharacterController::handleTextKey(const std::string &groupname, const std:
     }
 
     else if (groupname == "shield" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block one handed" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block two close" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block two wide" && evt.compare(off, len, "block hit") == 0)
         mPtr.getClass().block(mPtr);
 }
 
@@ -2582,7 +2628,7 @@ bool CharacterController::isCastingSpell() const
 
 bool CharacterController::isReadyToBlock() const
 {
-    return updateCarriedLeftVisible(mWeaponType);
+    return updateCarriedLeftVisible(mWeaponType) || readyToStartAttack();
 }
 
 bool CharacterController::isKnockedDown() const
