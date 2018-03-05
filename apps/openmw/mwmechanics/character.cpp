@@ -326,16 +326,16 @@ void CharacterController::refreshHitRecoilAnims()
                         case ESM::Weapon::LongBladeOneHand:
                         case ESM::Weapon::BluntOneHand:
                         case ESM::Weapon::AxeOneHand:
-                            blockAnimName = "block one handed";
+                            blockAnimName = "shield"; //"block one handed";
                             break;
                         case ESM::Weapon::LongBladeTwoHand:
                         case ESM::Weapon::BluntTwoClose:
                         case ESM::Weapon::AxeTwoHand:
-                            blockAnimName = "block two close";
+                            blockAnimName = "shield"; //"block two close";
                             break;
                         case ESM::Weapon::BluntTwoWide:
                         case ESM::Weapon::SpearTwoWide:
-                            blockAnimName = "block two wide";
+                            blockAnimName = "shield"; //"block two wide";
                             break;
                         default:
                             break;
@@ -1661,6 +1661,16 @@ bool CharacterController::updateWeaponState()
         }
     }
 
+    // TODO: here should be blocking animation handling
+    if (mPtr == getPlayer())
+    {
+        if (MWBase::Environment::get().getWorld()->getPlayer().getBlocking() && isReadyToBlock())
+        {
+            mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
+                false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);
+        }
+    }
+
     mAnimation->setAccurateAiming(mUpperBodyState > UpperCharState_WeapEquiped);
 
     return forcestateupdate;
@@ -1709,6 +1719,7 @@ void CharacterController::update(float duration)
         bool sneak = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Sneak);
         bool flying = world->isFlying(mPtr);
         // Can't run while flying (see speed formula in Npc/Creature::getSpeed)
+
         bool isrunning = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run) && !flying;
         CreatureStats &stats = cls.getCreatureStats(mPtr);
 
@@ -2339,7 +2350,17 @@ bool CharacterController::isAttackPrepairing() const
 
 bool CharacterController::isReadyToBlock() const
 {
-    return updateCarriedLeftVisible(mWeaponType) || readyToStartAttack();
+    if (mPtr == getPlayer())
+    {
+        if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
+            return false;
+    }
+
+    bool isShielVisible = updateCarriedLeftVisible(mWeaponType);
+    if (isShielVisible)
+        return true;
+
+    return readyToStartAttack();
 }
 
 bool CharacterController::isKnockedDown() const

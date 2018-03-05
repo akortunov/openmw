@@ -236,6 +236,11 @@ namespace MWWorld
         mTeleported = teleported;
     }
 
+    void Player::setBlocking(bool blocking)
+    {
+        mBlocking = blocking;
+    }
+
     void Player::setAttackingOrSpell(bool attackingOrSpell)
     {
         mAttackingOrSpell = attackingOrSpell;
@@ -244,6 +249,11 @@ namespace MWWorld
     bool Player::getAttackingOrSpell() const
     {
         return mAttackingOrSpell;
+    }
+
+    bool Player::getBlocking() const
+    {
+        return mBlocking;
     }
 
     bool Player::isInCombat() {
