@@ -40,6 +40,7 @@
 #include "../mwworld/player.hpp"
 
 #include "aicombataction.hpp"
+#include "combat.hpp"
 #include "movement.hpp"
 #include "npcstats.hpp"
 #include "creaturestats.hpp"
@@ -1858,15 +1859,15 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
         {
             mAnimation->disable("torch");
         }
-    }
 
-    // TODO: here should be blocking animation handling
-    if (mPtr == getPlayer())
-    {
-        if (isReadyToBlock())
+        // TODO: here should be blocking animation handling
+        if (mPtr == getPlayer())
         {
-            mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
-                false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);
+            if (isReadyToBlock() && getBlockingItem(mPtr) != inv.end())
+            {
+                mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
+                    false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);
+            }
         }
     }
 

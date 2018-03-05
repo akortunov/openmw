@@ -53,6 +53,41 @@ namespace MWMechanics
         return false;
     }
 
+    MWWorld::ContainerStoreIterator getBlockingItem(const MWWorld::Ptr& blocker)
+    {
+        MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
+        MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Armor).name())
+        {
+            // if there is no shield, try to block with weapon
+            shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+
+            // there is no weapon in hands
+            if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
+                return inv.end();
+
+            if (shield->getClass().hasItemHealth(*shield))
+            {
+                if (blocker == getPlayer())
+                {
+                    if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
+                    {
+                        return inv.end();
+                    }
+                }
+                else
+                {
+                    float maxCondition = shield->getClass().getItemMaxHealth(*shield);
+                    // Do not allow NPCs to block attacks with weapon if the weapon has condition < 50%
+                    if (shield->getClass().getItemHealth(*shield) < maxCondition * 0.5f)
+                        return inv.end();
+                }
+            }
+        }
+
+        return shield;
+    }
+
     bool blockMeleeAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, float attackStrength)
     {
         if (!blocker.getClass().hasInventoryStore(blocker))
@@ -69,37 +104,16 @@ namespace MWMechanics
             return false;
 
         MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
-        MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-        if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Armor).name())
+        MWWorld::ContainerStoreIterator shield = getBlockingItem(blocker);
+        if (shield == inv.end())
+            return false;
+
+        if (shield->getTypeName() == typeid(ESM::Weapon).name() && blocker != getPlayer())
         {
-            // if there is no shield, try to block with weapon
-            shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-
-            // there is no weapon in hands
-            if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
+            float maxCondition = shield->getClass().getItemMaxHealth(*shield);
+            // Do not allow to degrade more than 10% of weapon condition per attack
+            if (maxCondition * 0.1f < damage)
                 return false;
-
-            if (shield->getClass().hasItemHealth(*shield))
-            {
-                if (blocker == getPlayer())
-                {
-                    if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    float maxCondition = shield->getClass().getItemMaxHealth(*shield);
-                    // Do not allow to block attacks with weapon if the weapon has condition < 50%
-                    if (shield->getClass().getItemHealth(*shield) < maxCondition * 0.5f)
-                        return false;
-
-                    // Do not allow to degrade more than 10% of weapon condition per attack
-                    if (maxCondition * 0.1f < damage)
-                        return false;
-                }
-            }
         }
 
         if (!blocker.getRefData().getBaseNode())
