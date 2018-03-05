@@ -33,6 +33,7 @@
 #include "../mwbase/world.hpp"
 #include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/inventorystore.hpp"
@@ -548,6 +549,9 @@ void CharacterController::refreshMovementAnims(const WeaponInfo* weap, Character
         {
             bool isrunning = mPtr.getClass().getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run)
                     && !MWBase::Environment::get().getWorld()->isFlying(mPtr);
+
+            if (mPtr == MWMechanics::getPlayer() && MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(mPtr))
+                isrunning = false;
 
             // For non-flying creatures, MW uses the Walk animation to calculate the animation velocity
             // even if we are running. This must be replicated, otherwise the observed speed would differ drastically.
@@ -1922,6 +1926,9 @@ void CharacterController::update(float duration)
         // Can't run and sneak while flying (see speed formula in Npc/Creature::getSpeed)
         bool sneak = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Sneak) && !flying;
         bool isrunning = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run) && !flying;
+        if (mPtr == MWMechanics::getPlayer() && MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(mPtr))
+            isrunning = false;
+
         CreatureStats &stats = cls.getCreatureStats(mPtr);
 
         //Force Jump Logic
