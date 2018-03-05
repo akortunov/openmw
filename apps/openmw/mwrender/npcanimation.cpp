@@ -506,10 +506,6 @@ void NpcAnimation::updateNpcBase()
         mObjectRoot->addCullCallback(new OverrideFieldOfViewCallback(mFirstPersonFieldOfView));
     }
 
-    addAnimSource("animations\\xbase_anim\\SwimWalkForward;.nif", smodel);
-    addAnimSource("animations\\xbase_anim\\SwimRunForward;.nif", smodel);
-
-
     updateParts();
 
     mWeaponAnimationTime->updateStartTime();
