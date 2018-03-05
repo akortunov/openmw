@@ -252,7 +252,8 @@ namespace MWInput
             if (action == A_Use)
             {
                 MWMechanics::DrawState_ state = MWBase::Environment::get().getWorld()->getPlayer().getDrawState();
-                mPlayer->setAttackingOrSpell(currentValue != 0 && state != MWMechanics::DrawState_Nothing);
+                bool isBlocking = MWBase::Environment::get().getWorld()->getPlayer().getBlocking();
+                mPlayer->setAttackingOrSpell(currentValue != 0 && state != MWMechanics::DrawState_Nothing && !isBlocking);
             }
             else if (action == A_Block)
             {
