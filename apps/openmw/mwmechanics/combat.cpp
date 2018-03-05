@@ -75,6 +75,19 @@ namespace MWMechanics
             shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
                 return false;
+
+
+            if (shield->getClass().hasItemHealth(*shield))
+            {
+                float maxCondition = shield->getClass().getItemMaxHealth(*shield);
+                // Do not allow to block attacks with weapon if the weapon has condition < 50%
+                if (shield->getClass().getItemHealth(*shield) < maxCondition * 0.5f)
+                    return false;
+
+                // Do not allow to degrade more than 10% of weapon condition per attack
+                if (maxCondition * 0.1f < damage)
+                    return false;
+            }
         }
 
         if (!blocker.getRefData().getBaseNode())
