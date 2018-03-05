@@ -57,6 +57,7 @@ namespace MWWorld
 
         bool mAttackingOrSpell;
         bool mJumping;
+        bool mBlocking;
 
     public:
 
@@ -110,7 +111,9 @@ namespace MWWorld
         void setTeleported(bool teleported);
 
         void setAttackingOrSpell(bool attackingOrSpell);
+        void setBlocking(bool blocking);
         bool getAttackingOrSpell() const;
+        bool getBlocking() const;
 
         void setJumping(bool jumping);
         bool getJumping() const;
