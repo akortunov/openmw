@@ -931,6 +931,8 @@ namespace MWClass
 
         bool sneaking = ptr.getClass().getCreatureStats(ptr).getStance(MWMechanics::CreatureStats::Stance_Sneak);
         bool running = ptr.getClass().getCreatureStats(ptr).getStance(MWMechanics::CreatureStats::Stance_Run);
+        if (ptr == MWMechanics::getPlayer() && MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(ptr))
+            running = false;
 
         float walkSpeed = gmst.fMinWalkSpeed->getFloat() + 0.01f*npcdata->mNpcStats.getAttribute(ESM::Attribute::Speed).getModified()*
                                                       (gmst.fMaxWalkSpeed->getFloat() - gmst.fMinWalkSpeed->getFloat());
