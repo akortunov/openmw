@@ -1863,7 +1863,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
     // TODO: here should be blocking animation handling
     if (mPtr == getPlayer())
     {
-        if (MWBase::Environment::get().getWorld()->getPlayer().getBlocking() && isReadyToBlock())
+        if (isReadyToBlock())
         {
             mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
                 false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);

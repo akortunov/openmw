@@ -74,6 +74,8 @@ namespace MWMechanics
         {
             // if there is no shield, try to block with weapon
             shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+
+            // there is no weapon in hands
             if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
                 return false;
 
