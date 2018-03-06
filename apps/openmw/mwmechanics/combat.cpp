@@ -113,8 +113,11 @@ namespace MWMechanics
         return *weapon;
     }
 
-    bool blockMeleeAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, float attackStrength)
+    bool blockAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, const osg::Vec3f& hitPosition, float attackStrength, bool melee)
     {
+        if (blocker.isEmpty() || attacker.isEmpty())
+            return false;
+
         if (!blocker.getClass().hasInventoryStore(blocker))
             return false;
 
@@ -133,6 +136,12 @@ namespace MWMechanics
         if (shield.isEmpty())
             return false;
 
+        // We can block arrows only by shield
+        if (shield.getTypeName() != typeid(ESM::Armor).name() && !melee)
+        {
+            return false;
+        }
+
         if (shield.getTypeName() == typeid(ESM::Weapon).name() && blocker != getPlayer())
         {
             float maxCondition = shield.getClass().getItemMaxHealth(shield);
@@ -144,9 +153,14 @@ namespace MWMechanics
         if (!blocker.getRefData().getBaseNode())
             return false; // shouldn't happen
 
+        // hit position useless for melee weapon
+        osg::Vec3f pos(attacker.getRefData().getPosition().asVec3());
+        if (!melee)
+            pos = hitPosition;
+
         float angleDegrees = osg::RadiansToDegrees(
                     signedAngleRadians (
-                    (attacker.getRefData().getPosition().asVec3() - blocker.getRefData().getPosition().asVec3()),
+                    (pos - blocker.getRefData().getPosition().asVec3()),
                     blocker.getRefData().getBaseNode()->getAttitude() * osg::Vec3f(0,1,0),
                     osg::Vec3f(0,0,1)));
 
@@ -304,6 +318,9 @@ namespace MWMechanics
         bool appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, weapon, hitPosition, true);
         if (weapon != projectile)
             appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
+
+        if (blockAttack(attacker, victim, weapon, damage, hitPosition, attackStrength, false))
+            damage = 0;
 
         if (validVictim)
         {
