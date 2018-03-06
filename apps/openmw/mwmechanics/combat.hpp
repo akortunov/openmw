@@ -11,7 +11,7 @@ bool applyOnStrikeEnchantment(const MWWorld::Ptr& attacker, const MWWorld::Ptr& 
                               const bool fromProjectile=false);
 
 /// @return can we block the attack?
-bool blockMeleeAttack (const MWWorld::Ptr& attacker, const MWWorld::Ptr& blocker, const MWWorld::Ptr& weapon, float damage, float attackStrength);
+bool blockAttack (const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, const osg::Vec3f& hitPosition, float attackStrength, bool melee=true);
 
 void resistNormalWeapon (const MWWorld::Ptr& actor, const MWWorld::Ptr& attacker, const MWWorld::Ptr& weapon, float& damage);
 
