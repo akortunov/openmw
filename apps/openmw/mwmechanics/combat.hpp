@@ -32,7 +32,7 @@ void applyElementalShields(const MWWorld::Ptr& attacker, const MWWorld::Ptr& vic
 /// @note if the weapon is unequipped as result of condition damage, a new Ptr will be assigned to \a weapon.
 void reduceWeaponCondition (float damage, bool hit, MWWorld::Ptr& weapon, const MWWorld::Ptr& attacker);
 
-MWWorld::ContainerStoreIterator getBlockingItem(const MWWorld::Ptr& blocker);
+const MWWorld::Ptr getBlockingItem(const MWWorld::Ptr& blocker);
 
 /// Adjust weapon damage based on its condition. A used weapon will be less effective.
 void adjustWeaponDamage (float& damage, const MWWorld::Ptr& weapon, const MWWorld::Ptr& attacker);

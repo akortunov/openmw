@@ -53,39 +53,64 @@ namespace MWMechanics
         return false;
     }
 
-    MWWorld::ContainerStoreIterator getBlockingItem(const MWWorld::Ptr& blocker)
+    const MWWorld::Ptr getBlockingItem(const MWWorld::Ptr& blocker)
     {
         MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
         MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-        if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Armor).name())
+        MWWorld::ContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        CreatureStats &stats = blocker.getClass().getCreatureStats(blocker);
+        MWMechanics::DrawState_ state = stats.getDrawState();
+
+        if (shield != inv.end() && shield->getTypeName() == typeid(ESM::Armor).name())
         {
-            // if there is no shield, try to block with weapon
-            shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-
-            // there is no weapon in hands
-            if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Weapon).name())
-                return inv.end();
-
-            if (shield->getClass().hasItemHealth(*shield))
+            bool useShield = false;
+            if (state == MWMechanics::DrawState_Weapon)
             {
-                if (blocker == getPlayer())
+                if (weapon != inv.end() && weapon->getTypeName() == typeid(ESM::Weapon).name())
                 {
-                    if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
-                    {
-                        return inv.end();
-                    }
+                    int type = weapon->get<ESM::Weapon>()->mBase->mData.mType;
+                    if(type == ESM::Weapon::ShortBladeOneHand ||
+                    type == ESM::Weapon::LongBladeOneHand ||
+                    type == ESM::Weapon::BluntOneHand ||
+                    type == ESM::Weapon::AxeOneHand)
+                        useShield = true;
                 }
-                else
+            }
+            else if (state == MWMechanics::DrawState_Nothing)
+                useShield = true;
+
+            if (useShield)
+                return *shield;
+        }
+
+        // there is no weapon in hands
+        if (weapon == inv.end() || weapon->getTypeName() != typeid(ESM::Weapon).name())
+            return MWWorld::Ptr();
+
+        // if there is no shield, or blocker use two-handed weapon, try to block with weapon
+        if (weapon->getClass().hasItemHealth(*weapon))
+        {
+            // Weapon is holstered
+            if (state != MWMechanics::DrawState_Weapon)
+                return MWWorld::Ptr();
+
+            if (blocker == getPlayer())
+            {
+                if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
                 {
-                    float maxCondition = shield->getClass().getItemMaxHealth(*shield);
-                    // Do not allow NPCs to block attacks with weapon if the weapon has condition < 50%
-                    if (shield->getClass().getItemHealth(*shield) < maxCondition * 0.5f)
-                        return inv.end();
+                    return MWWorld::Ptr();
                 }
+            }
+            else
+            {
+                float maxCondition = weapon->getClass().getItemMaxHealth(*weapon);
+                // Do not allow NPCs to block attacks with weapon if the weapon has condition < 50%
+                if (weapon->getClass().getItemHealth(*weapon) < maxCondition * 0.5f)
+                    return MWWorld::Ptr();
             }
         }
 
-        return shield;
+        return *weapon;
     }
 
     bool blockMeleeAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, float attackStrength)
@@ -104,13 +129,13 @@ namespace MWMechanics
             return false;
 
         MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
-        MWWorld::ContainerStoreIterator shield = getBlockingItem(blocker);
-        if (shield == inv.end())
+        const MWWorld::Ptr shield = getBlockingItem(blocker);
+        if (shield.isEmpty())
             return false;
 
-        if (shield->getTypeName() == typeid(ESM::Weapon).name() && blocker != getPlayer())
+        if (shield.getTypeName() == typeid(ESM::Weapon).name() && blocker != getPlayer())
         {
-            float maxCondition = shield->getClass().getItemMaxHealth(*shield);
+            float maxCondition = shield.getClass().getItemMaxHealth(shield);
             // Do not allow to degrade more than 10% of weapon condition per attack
             if (maxCondition * 0.1f < damage)
                 return false;

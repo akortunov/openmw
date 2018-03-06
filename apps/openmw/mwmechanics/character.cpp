@@ -550,7 +550,7 @@ void CharacterController::refreshMovementAnims(const WeaponInfo* weap, Character
             bool isrunning = mPtr.getClass().getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run)
                     && !MWBase::Environment::get().getWorld()->isFlying(mPtr);
 
-            if (mPtr == MWMechanics::getPlayer() && MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(mPtr))
+            if (mPtr == MWMechanics::getPlayer() && isReadyToBlock())
                 isrunning = false;
 
             // For non-flying creatures, MW uses the Walk animation to calculate the animation velocity
@@ -1867,7 +1867,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
         // TODO: here should be blocking animation handling
         if (mPtr == getPlayer())
         {
-            if (isReadyToBlock() && getBlockingItem(mPtr) != inv.end())
+            if (isReadyToBlock())
             {
                 mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
                     false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);
@@ -1926,7 +1926,7 @@ void CharacterController::update(float duration)
         // Can't run and sneak while flying (see speed formula in Npc/Creature::getSpeed)
         bool sneak = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Sneak) && !flying;
         bool isrunning = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run) && !flying;
-        if (mPtr == MWMechanics::getPlayer() && MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(mPtr))
+        if (mPtr == MWMechanics::getPlayer() && isReadyToBlock())
             isrunning = false;
 
         CreatureStats &stats = cls.getCreatureStats(mPtr);
@@ -2652,11 +2652,7 @@ bool CharacterController::isReadyToBlock() const
             return false;
     }
 
-    bool isShielVisible = updateCarriedLeftVisible(mWeaponType);
-    if (isShielVisible)
-        return true;
-
-    return readyToStartAttack();
+    return !getBlockingItem(mPtr).isEmpty();
 }
 
 bool CharacterController::isKnockedDown() const
