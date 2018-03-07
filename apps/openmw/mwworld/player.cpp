@@ -37,7 +37,8 @@ namespace MWWorld
         mCurrentCrimeId(-1),
         mPaidCrimeId(-1),
         mAttackingOrSpell(false),
-        mJumping(false)
+        mJumping(false),
+        mBlocking(false)
     {
         ESM::CellRef cellRef;
         cellRef.blank();
@@ -308,6 +309,7 @@ namespace MWWorld
         mTeleported = false;
         mAttackingOrSpell = false;
         mJumping = false;
+        mBlocking = false;
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mPreviousItems.clear();
@@ -468,6 +470,7 @@ namespace MWWorld
             mTeleported = false;
 
             mPreviousItems = player.mPreviousItems;
+            mBlocking = false;
 
             return true;
         }

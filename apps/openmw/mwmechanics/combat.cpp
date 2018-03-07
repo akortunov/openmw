@@ -201,12 +201,12 @@ namespace MWMechanics
             if (!(weapon.isEmpty() && !attacker.getClass().isNpc())) // Unarmed creature attacks don't affect armor condition
             {
                 // Reduce shield durability by incoming damage
-                int shieldhealth = shield->getClass().getItemHealth(*shield);
+                int shieldhealth = shield.getClass().getItemHealth(shield);
 
                 shieldhealth -= std::min(shieldhealth, int(damage));
-                shield->getCellRef().setCharge(shieldhealth);
+                shield.getCellRef().setCharge(shieldhealth);
                 if (shieldhealth == 0)
-                    inv.unequipItem(*shield, blocker);
+                    inv.unequipItem(shield, blocker);
             }
             // Reduce blocker fatigue
             const float fFatigueBlockBase = gmst.find("fFatigueBlockBase")->mValue.getFloat();
