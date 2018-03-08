@@ -4,15 +4,27 @@
 
 #include <osg/Node>
 #include <osg/Group>
+#include <osg/MatrixTransform>
 #include <osg/Vec4f>
 
 #include <components/esm/loadligh.hpp>
 #include <components/esm/loadcell.hpp>
 
+#include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
+
+#include <components/sceneutil/attach.hpp>
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/sceneutil/lightutil.hpp>
+#include <components/sceneutil/visitor.hpp>
 
 #include <components/fallback/fallback.hpp>
+
+#include <components/misc/stringops.hpp>
+
+#include <components/settings/settings.hpp>
+
+#include <components/vfs/manager.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
@@ -40,6 +52,8 @@ ActorAnimation::ActorAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group>
             addHiddenItemLight(*iter, light);
         }
     }
+
+    mWeaponSheathing = Settings::Manager::getBool("weapon sheathing", "Game");
 }
 
 ActorAnimation::~ActorAnimation()
@@ -48,6 +62,114 @@ ActorAnimation::~ActorAnimation()
     {
         mInsert->removeChild(iter->second);
     }
+
+    mScabbard.reset();
+    mHolsteredWeapon.reset();
+}
+
+PartHolderPtr ActorAnimation::insertHolsteredWeapon(const std::string& model, const std::string& bonename, const std::string& bonefilter, bool enchantedGlow, osg::Vec4f* glowColor)
+{
+    osg::Group* parent = getHolsteredWeaponBone(bonename);
+    if (!parent)
+        return NULL;
+
+    osg::ref_ptr<osg::Node> instance = mResourceSystem->getSceneManager()->getInstance(model, parent);
+
+    const NodeMap& nodeMap = getNodeMap();
+    NodeMap::const_iterator found = nodeMap.find(Misc::StringUtils::lowerCase(bonename));
+    if (found == nodeMap.end())
+        return PartHolderPtr();
+
+    if (enchantedGlow)
+        addGlow(instance, *glowColor);
+
+    return PartHolderPtr(new PartHolder(instance));
+}
+
+osg::Group* ActorAnimation::getHolsteredWeaponBone(std::string boneName)
+{
+    if (!mObjectRoot)
+        return NULL;
+
+    SceneUtil::FindByNameVisitor findVisitor (boneName);
+    mObjectRoot->accept(findVisitor);
+
+    return findVisitor.mFoundNode;
+}
+
+std::string ActorAnimation::getHolsteredWeaponBoneName(const MWWorld::ConstPtr& weapon)
+{
+    std::string boneName = "";
+    if(weapon.isEmpty())
+        return boneName;
+
+    const std::string &type = weapon.getClass().getTypeName();
+    if(type == typeid(ESM::Weapon).name())
+    {
+        const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon.get<ESM::Weapon>();
+        ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+        switch(weaponType)
+        {
+            case ESM::Weapon::ShortBladeOneHand:
+            case ESM::Weapon::LongBladeOneHand:
+            case ESM::Weapon::BluntOneHand:
+            case ESM::Weapon::AxeOneHand:
+                boneName = "Bip01 L WeaponOneHand";
+                break;
+            case ESM::Weapon::LongBladeTwoHand:
+            case ESM::Weapon::BluntTwoClose:
+            case ESM::Weapon::AxeTwoHand:
+                boneName = "Bip01 TwoClose";
+                break;
+            case ESM::Weapon::BluntTwoWide:
+            case ESM::Weapon::SpearTwoWide:
+                boneName = "Bip01 TwoWide";
+                break;
+            case ESM::Weapon::MarksmanBow:
+                boneName = "Bip01 Bow";
+                break;
+            case ESM::Weapon::MarksmanCrossbow:
+                boneName = "Bip01 Crossbow";
+                break;
+            default:
+                break;
+        }
+    }
+
+    return boneName;
+}
+
+void ActorAnimation::updateHolsteredWeapon(bool showHolsteredWeapons)
+{
+    if (!mWeaponSheathing)
+        return;
+
+    if (!mPtr.getClass().hasInventoryStore(mPtr))
+        return;
+
+    mHolsteredWeapon.reset();
+    mScabbard.reset();
+
+    const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+    MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    if(weapon == inv.end())
+        return;
+
+    osg::Vec4f glowColor = getEnchantmentColor(*weapon);
+    std::string mesh = weapon->getClass().getModel(*weapon);
+    std::string boneName = getHolsteredWeaponBoneName(*weapon);
+    if (mesh.empty() || boneName.empty())
+        return;
+
+    if (showHolsteredWeapons && !boneName.empty())
+        mHolsteredWeapon = insertHolsteredWeapon(mesh, boneName, boneName, !weapon->getClass().getEnchantment(*weapon).empty(), &glowColor);
+
+    // If there is a scabbard model for this mesh, show it
+    std::string scabbardName = mesh.replace(mesh.size()-4, 4, "_sbd.nif");
+    if(!mResourceSystem->getVFS()->exists(scabbardName))
+        return;
+
+    mScabbard = insertHolsteredWeapon(scabbardName, boneName, boneName, false, &glowColor);
 }
 
 void ActorAnimation::itemAdded(const MWWorld::ConstPtr& item, int /*count*/)

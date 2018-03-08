@@ -57,6 +57,8 @@ CreatureWeaponAnimation::CreatureWeaponAnimation(const MWWorld::Ptr &ptr, const 
         mPtr.getClass().getInventoryStore(mPtr).setInvListener(this, mPtr);
 
         updateParts();
+
+        updateHolsteredWeapon(!mShowWeapons);
     }
 
     mWeaponAnimationTime = std::shared_ptr<WeaponAnimationTime>(new WeaponAnimationTime(this));
@@ -85,6 +87,8 @@ void CreatureWeaponAnimation::updateParts()
     mAmmunition.reset();
     mWeapon.reset();
     mShield.reset();
+
+    updateHolsteredWeapon(!mShowWeapons);
 
     if (mShowWeapons)
         updatePart(mWeapon, MWWorld::InventoryStore::Slot_CarriedRight);
