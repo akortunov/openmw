@@ -51,6 +51,7 @@ namespace MWWorld
         MWMechanics::AttributeValue mSaveAttributes[ESM::Attribute::Length];
 
         bool mAttackingOrSpell;
+        bool mBlocking;
 
     public:
 
@@ -104,7 +105,9 @@ namespace MWWorld
         void setTeleported(bool teleported);
 
         void setAttackingOrSpell(bool attackingOrSpell);
+        void setBlocking(bool blocking);
         bool getAttackingOrSpell() const;
+        bool getBlocking() const;
 
         ///Checks all nearby actors to see if anyone has an aipackage against you
         bool isInCombat();

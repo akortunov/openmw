@@ -314,6 +314,8 @@ namespace MWInput
             A_MoveForwardBackward,
             A_MoveLeftRight,
 
+            A_Block,          // Manual blocking
+
             A_Last            // Marker for the last item
         };
     };

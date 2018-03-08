@@ -33,12 +33,14 @@
 #include "../mwbase/world.hpp"
 #include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/player.hpp"
 
+#include "combat.hpp"
 #include "movement.hpp"
 #include "npcstats.hpp"
 #include "creaturestats.hpp"
@@ -304,13 +306,53 @@ void CharacterController::refreshHitRecoilAnims()
                 }
             }
         }
-        else if (block && mAnimation->hasAnimation("shield"))
+        else if (block && mPtr.getClass().hasInventoryStore(mPtr))
         {
-            mHitState = CharState_Block;
-            mCurrentHit = "shield";
-            MWRender::Animation::AnimPriority priorityBlock (Priority_Hit);
-            priorityBlock[MWRender::Animation::BoneGroup_LeftArm] = Priority_Block;
-            mAnimation->play(mCurrentHit, priorityBlock, MWRender::Animation::BlendMask_All, true, 1, "block start", "block stop", 0.0f, 0);
+            std::string blockAnimName = "";
+            MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+            MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            if (shield != inv.end() && shield->getTypeName() == typeid(ESM::Armor).name())
+            {
+                blockAnimName = "shield";
+            }
+            else
+            {
+                MWWorld::ContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if (weapon != inv.end() && weapon->getTypeName() == typeid(ESM::Weapon).name())
+                {
+                    const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon->get<ESM::Weapon>();
+                    ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+                    switch(weaponType)
+                    {
+                        case ESM::Weapon::ShortBladeOneHand:
+                        case ESM::Weapon::LongBladeOneHand:
+                        case ESM::Weapon::BluntOneHand:
+                        case ESM::Weapon::AxeOneHand:
+                            blockAnimName = "shield"; //"block one handed";
+                            break;
+                        case ESM::Weapon::LongBladeTwoHand:
+                        case ESM::Weapon::BluntTwoClose:
+                        case ESM::Weapon::AxeTwoHand:
+                            blockAnimName = "shield"; //"block two close";
+                            break;
+                        case ESM::Weapon::BluntTwoWide:
+                        case ESM::Weapon::SpearTwoWide:
+                            blockAnimName = "shield"; //"block two wide";
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (!blockAnimName.empty() && mAnimation->hasAnimation(blockAnimName))
+            {
+                mHitState = CharState_Block;
+                mCurrentHit = blockAnimName;
+                MWRender::Animation::AnimPriority priorityBlock (Priority_Hit);
+                priorityBlock[MWRender::Animation::BoneGroup_LeftArm] = Priority_Block;
+                mAnimation->play(mCurrentHit, priorityBlock, MWRender::Animation::BlendMask_All, true, 1, "block start", "block stop", 0.0f, 0);
+            }
         }
 
         // Cancel upper body animations
@@ -471,6 +513,9 @@ void CharacterController::refreshMovementAnims(const WeaponInfo* weap, Character
         {
             bool isrunning = mPtr.getClass().getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run)
                     && !MWBase::Environment::get().getWorld()->isFlying(mPtr);
+
+            if (mPtr == MWMechanics::getPlayer() && isReadyToBlock())
+                isrunning = false;
 
             // For non-flying creatures, MW uses the Walk animation to calculate the animation velocity
             // even if we are running. This must be replicated, otherwise the observed speed would differ drastically.
@@ -986,6 +1031,12 @@ void CharacterController::handleTextKey(const std::string &groupname, const std:
     }
 
     else if (groupname == "shield" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block one handed" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block two close" && evt.compare(off, len, "block hit") == 0)
+        mPtr.getClass().block(mPtr);
+    else if (groupname == "block two wide" && evt.compare(off, len, "block hit") == 0)
         mPtr.getClass().block(mPtr);
 }
 
@@ -1613,6 +1664,16 @@ bool CharacterController::updateWeaponState()
         {
             mAnimation->disable("torch");
         }
+
+        // TODO: here should be blocking animation handling
+        if (mPtr == getPlayer())
+        {
+            if (isReadyToBlock())
+            {
+                mAnimation->play("torch", Priority_Torch, MWRender::Animation::BlendMask_LeftArm,
+                    false, 1.0f, "start", "stop", 0.0f, (~(size_t)0), true);
+            }
+        }
     }
 
     mAnimation->setAccurateAiming(mUpperBodyState > UpperCharState_WeapEquiped);
@@ -1663,7 +1724,11 @@ void CharacterController::update(float duration)
         bool sneak = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Sneak);
         bool flying = world->isFlying(mPtr);
         // Can't run while flying (see speed formula in Npc/Creature::getSpeed)
+
         bool isrunning = cls.getCreatureStats(mPtr).getStance(MWMechanics::CreatureStats::Stance_Run) && !flying;
+        if (mPtr == MWMechanics::getPlayer() && isReadyToBlock())
+            isrunning = false;
+
         CreatureStats &stats = cls.getCreatureStats(mPtr);
 
         //Force Jump Logic
@@ -2293,7 +2358,13 @@ bool CharacterController::isAttackPrepairing() const
 
 bool CharacterController::isReadyToBlock() const
 {
-    return updateCarriedLeftVisible(mWeaponType);
+    if (mPtr == getPlayer())
+    {
+        if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
+            return false;
+    }
+
+    return !getBlockingItem(mPtr).isEmpty();
 }
 
 bool CharacterController::isKnockedDown() const

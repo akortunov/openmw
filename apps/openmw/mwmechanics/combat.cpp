@@ -13,6 +13,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/player.hpp"
 
 #include "npcstats.hpp"
 #include "movement.hpp"
@@ -51,8 +52,71 @@ namespace MWMechanics
         return false;
     }
 
-    bool blockMeleeAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, float attackStrength)
+    const MWWorld::Ptr getBlockingItem(const MWWorld::Ptr& blocker)
     {
+        MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
+        MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        MWWorld::ContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        CreatureStats &stats = blocker.getClass().getCreatureStats(blocker);
+        MWMechanics::DrawState_ state = stats.getDrawState();
+
+        if (shield != inv.end() && shield->getTypeName() == typeid(ESM::Armor).name())
+        {
+            bool useShield = false;
+            if (state == MWMechanics::DrawState_Weapon)
+            {
+                if (weapon != inv.end() && weapon->getTypeName() == typeid(ESM::Weapon).name())
+                {
+                    int type = weapon->get<ESM::Weapon>()->mBase->mData.mType;
+                    if(type == ESM::Weapon::ShortBladeOneHand ||
+                    type == ESM::Weapon::LongBladeOneHand ||
+                    type == ESM::Weapon::BluntOneHand ||
+                    type == ESM::Weapon::AxeOneHand)
+                        useShield = true;
+                }
+            }
+            else if (state == MWMechanics::DrawState_Nothing)
+                useShield = true;
+
+            if (useShield)
+                return *shield;
+        }
+
+        // there is no weapon in hands
+        if (weapon == inv.end() || weapon->getTypeName() != typeid(ESM::Weapon).name())
+            return MWWorld::Ptr();
+
+        // if there is no shield, or blocker use two-handed weapon, try to block with weapon
+        if (weapon->getClass().hasItemHealth(*weapon))
+        {
+            // Weapon is holstered
+            if (state != MWMechanics::DrawState_Weapon)
+                return MWWorld::Ptr();
+
+            if (blocker == getPlayer())
+            {
+                if (!MWBase::Environment::get().getWorld()->getPlayer().getBlocking())
+                {
+                    return MWWorld::Ptr();
+                }
+            }
+            else
+            {
+                float maxCondition = weapon->getClass().getItemMaxHealth(*weapon);
+                // Do not allow NPCs to block attacks with weapon if the weapon has condition < 50%
+                if (weapon->getClass().getItemHealth(*weapon) < maxCondition * 0.5f)
+                    return MWWorld::Ptr();
+            }
+        }
+
+        return *weapon;
+    }
+
+    bool blockAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, const osg::Vec3f& hitPosition, float attackStrength, bool melee)
+    {
+        if (blocker.isEmpty() || attacker.isEmpty())
+            return false;
+
         if (!blocker.getClass().hasInventoryStore(blocker))
             return false;
 
@@ -67,16 +131,35 @@ namespace MWMechanics
             return false;
 
         MWWorld::InventoryStore& inv = blocker.getClass().getInventoryStore(blocker);
-        MWWorld::ContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-        if (shield == inv.end() || shield->getTypeName() != typeid(ESM::Armor).name())
+        const MWWorld::Ptr shield = getBlockingItem(blocker);
+        if (shield.isEmpty())
             return false;
+
+        // We can block arrows only by shield
+        if (shield.getTypeName() != typeid(ESM::Armor).name() && !melee)
+        {
+            return false;
+        }
+
+        if (shield.getTypeName() == typeid(ESM::Weapon).name() && blocker != getPlayer())
+        {
+            float maxCondition = shield.getClass().getItemMaxHealth(shield);
+            // Do not allow to degrade more than 10% of weapon condition per attack
+            if (maxCondition * 0.1f < damage)
+                return false;
+        }
 
         if (!blocker.getRefData().getBaseNode())
             return false; // shouldn't happen
 
+        // hit position useless for melee weapon
+        osg::Vec3f pos(attacker.getRefData().getPosition().asVec3());
+        if (!melee)
+            pos = hitPosition;
+
         float angleDegrees = osg::RadiansToDegrees(
                     signedAngleRadians (
-                    (attacker.getRefData().getPosition().asVec3() - blocker.getRefData().getPosition().asVec3()),
+                    (pos - blocker.getRefData().getPosition().asVec3()),
                     blocker.getRefData().getBaseNode()->getAttitude() * osg::Vec3f(0,1,0),
                     osg::Vec3f(0,0,1)));
 
@@ -115,12 +198,12 @@ namespace MWMechanics
         if (Misc::Rng::roll0to99() < x)
         {
             // Reduce shield durability by incoming damage
-            int shieldhealth = shield->getClass().getItemHealth(*shield);
+            int shieldhealth = shield.getClass().getItemHealth(shield);
 
             shieldhealth -= std::min(shieldhealth, int(damage));
-            shield->getCellRef().setCharge(shieldhealth);
+            shield.getCellRef().setCharge(shieldhealth);
             if (shieldhealth == 0)
-                inv.unequipItem(*shield, blocker);
+                inv.unequipItem(shield, blocker);
 
             // Reduce blocker fatigue
             const float fFatigueBlockBase = gmst.find("fFatigueBlockBase")->getFloat();
@@ -215,6 +298,9 @@ namespace MWMechanics
         bool appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, weapon, hitPosition, true);
         if (weapon != projectile)
             appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
+
+        if (blockAttack(attacker, victim, weapon, damage, hitPosition, attackStrength, false))
+            damage = 0;
 
         if (validVictim)
         {

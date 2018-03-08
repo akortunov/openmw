@@ -35,7 +35,8 @@ namespace MWWorld
         mTeleported(false),
         mCurrentCrimeId(-1),
         mPaidCrimeId(-1),
-        mAttackingOrSpell(false)
+        mAttackingOrSpell(false),
+        mBlocking(false)
     {
         ESM::CellRef cellRef;
         cellRef.blank();
@@ -236,6 +237,11 @@ namespace MWWorld
         mTeleported = teleported;
     }
 
+    void Player::setBlocking(bool blocking)
+    {
+        mBlocking = blocking;
+    }
+
     void Player::setAttackingOrSpell(bool attackingOrSpell)
     {
         mAttackingOrSpell = attackingOrSpell;
@@ -244,6 +250,11 @@ namespace MWWorld
     bool Player::getAttackingOrSpell() const
     {
         return mAttackingOrSpell;
+    }
+
+    bool Player::getBlocking() const
+    {
+        return mBlocking;
     }
 
     bool Player::isInCombat() {
@@ -277,6 +288,7 @@ namespace MWWorld
         mForwardBackward = 0;
         mTeleported = false;
         mAttackingOrSpell = false;
+        mBlocking = false;
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mLastKnownExteriorPosition = osg::Vec3f(0,0,0);
@@ -432,6 +444,8 @@ namespace MWWorld
 
             mForwardBackward = 0;
             mTeleported = false;
+
+            mBlocking = false;
 
             return true;
         }
