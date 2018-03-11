@@ -161,11 +161,6 @@ This setting can only be configured by editing the settings configuration file.
 
 use additional anim sources
 ---------------------------
-
-:Type:		boolean
-:Range:		True/False
-:Default:	False
-
 Allow to load additional animation sources when enabled.
 For example, if the main animation mesh has name Meshes/x.nif, an engine will load all KF-files from Animations/x folder and its child folders.
 Can be useful if you want to use several animation replacers without merging them.
@@ -183,3 +178,16 @@ If this setting is true, disposition change of merchants caused by trading will 
 This imitates the option Morrowind Code Patch offers.
 
 This setting can be toggled with a checkbox in Advanced tab of the launcher.
+
+restore projectiles
+-------------------
+
+:Type:		boolean
+:Range:		True/False
+:Default:	False
+
+If enabled, spawns projectile in the hit position, if the target is not actor.
+The player can not restore projectile, if the hit object is a water or lava.
+Can alter game balance and decrease performance.
+
+This setting can only be configured by editing the settings configuration file.
