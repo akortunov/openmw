@@ -57,8 +57,6 @@ CreatureWeaponAnimation::CreatureWeaponAnimation(const MWWorld::Ptr &ptr, const 
         mPtr.getClass().getInventoryStore(mPtr).setInvListener(this, mPtr);
 
         updateParts();
-
-        updateHolsteredWeapon(!mShowWeapons);
     }
 
     mWeaponAnimationTime = std::shared_ptr<WeaponAnimationTime>(new WeaponAnimationTime(this));
@@ -89,6 +87,7 @@ void CreatureWeaponAnimation::updateParts()
     mShield.reset();
 
     updateHolsteredWeapon(!mShowWeapons);
+    updateQuiver();
 
     if (mShowWeapons)
         updatePart(mWeapon, MWWorld::InventoryStore::Slot_CarriedRight);
@@ -166,11 +165,13 @@ void CreatureWeaponAnimation::updatePart(PartHolderPtr& scene, int slot)
 void CreatureWeaponAnimation::attachArrow()
 {
     WeaponAnimation::attachArrow(mPtr);
+    updateQuiver(true);
 }
 
 void CreatureWeaponAnimation::releaseArrow(float attackStrength)
 {
     WeaponAnimation::releaseArrow(mPtr, attackStrength);
+    updateQuiver();
 }
 
 osg::Group *CreatureWeaponAnimation::getArrowBone()

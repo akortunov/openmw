@@ -1,5 +1,4 @@
 #include "actoranimation.hpp"
-
 #include <utility>
 
 #include <osg/Node>
@@ -67,9 +66,9 @@ ActorAnimation::~ActorAnimation()
     mHolsteredWeapon.reset();
 }
 
-PartHolderPtr ActorAnimation::insertHolsteredWeapon(const std::string& model, const std::string& bonename, const std::string& bonefilter, bool enchantedGlow, osg::Vec4f* glowColor)
+PartHolderPtr ActorAnimation::getWeaponPart(const std::string& model, const std::string& bonename, bool enchantedGlow, osg::Vec4f* glowColor)
 {
-    osg::Group* parent = getHolsteredWeaponBone(bonename);
+    osg::Group* parent = getBoneByName(bonename);
     if (!parent)
         return NULL;
 
@@ -86,7 +85,7 @@ PartHolderPtr ActorAnimation::insertHolsteredWeapon(const std::string& model, co
     return PartHolderPtr(new PartHolder(instance));
 }
 
-osg::Group* ActorAnimation::getHolsteredWeaponBone(std::string boneName)
+osg::Group* ActorAnimation::getBoneByName(std::string boneName)
 {
     if (!mObjectRoot)
         return NULL;
@@ -139,6 +138,33 @@ std::string ActorAnimation::getHolsteredWeaponBoneName(const MWWorld::ConstPtr& 
     return boneName;
 }
 
+std::string ActorAnimation::getQuiverBoneName(const MWWorld::ConstPtr& weapon)
+{
+    std::string boneName = "";
+    if(weapon.isEmpty())
+        return boneName;
+
+    const std::string &type = weapon.getClass().getTypeName();
+    if(type == typeid(ESM::Weapon).name())
+    {
+        const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon.get<ESM::Weapon>();
+        ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+        switch(weaponType)
+        {
+            case ESM::Weapon::MarksmanBow:
+                boneName = "Bip01 Arrow";
+                break;
+            case ESM::Weapon::MarksmanCrossbow:
+                boneName = "Bip01 Bolt";
+                break;
+            default:
+                break;
+        }
+    }
+
+    return boneName;
+}
+
 void ActorAnimation::updateHolsteredWeapon(bool showHolsteredWeapons)
 {
     if (!mWeaponSheathing)
@@ -162,14 +188,77 @@ void ActorAnimation::updateHolsteredWeapon(bool showHolsteredWeapons)
         return;
 
     if (showHolsteredWeapons && !boneName.empty())
-        mHolsteredWeapon = insertHolsteredWeapon(mesh, boneName, boneName, !weapon->getClass().getEnchantment(*weapon).empty(), &glowColor);
+    {
+        bool isEnchanted = !weapon->getClass().getEnchantment(*weapon).empty();
+        mHolsteredWeapon = getWeaponPart(mesh, boneName, isEnchanted, &glowColor);
+    }
 
     // If there is a scabbard model for this mesh, show it
     std::string scabbardName = mesh.replace(mesh.size()-4, 4, "_sbd.nif");
     if(!mResourceSystem->getVFS()->exists(scabbardName))
         return;
 
-    mScabbard = insertHolsteredWeapon(scabbardName, boneName, boneName, false, &glowColor);
+    mScabbard = getWeaponPart(scabbardName, boneName, false, &glowColor);
+}
+
+void ActorAnimation::updateQuiver(bool arrowAttached)
+{
+    if (!mWeaponSheathing)
+        return;
+
+    if (!mPtr.getClass().hasInventoryStore(mPtr))
+        return;
+
+    mQuiver.reset();
+
+    const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+    MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    if(weapon == inv.end())
+        return;
+
+    std::string mesh = weapon->getClass().getModel(*weapon);
+    std::string boneName = getQuiverBoneName(*weapon);
+    if (mesh.empty() || boneName.empty())
+        return;
+
+    // If there is a scabbard model for this mesh, show it
+    std::string quiverName = mesh.replace(mesh.size()-4, 4, "_quiver.nif");
+    if(!mResourceSystem->getVFS()->exists(quiverName))
+        return;
+
+    mQuiver = getWeaponPart(quiverName, boneName);
+
+    MWWorld::ConstContainerStoreIterator ammo = inv.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    if (ammo == inv.end())
+        return;
+
+    int count = ammo->getRefData().getCount();
+    if (arrowAttached)
+        count--;
+    if (count <= 0)
+        return;
+
+    bool suitableAmmo = false;
+    if (weapon->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::MarksmanCrossbow)
+        suitableAmmo = ammo->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::Bolt;
+    else if (weapon->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::MarksmanBow)
+        suitableAmmo = ammo->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::Arrow;
+
+    if (mQuiver && suitableAmmo)
+    {
+        GetArrowNodesVisitor findVisitor (count);
+        mQuiver->getNode()->accept(findVisitor);
+        std::vector<osg::Group*> arrowNodes = findVisitor.mArrowNodes;
+
+        osg::Vec4f glowColor = getEnchantmentColor(*ammo);
+        std::string model = ammo->getClass().getModel(*ammo);
+        for (std::vector<osg::Group*>::iterator it = arrowNodes.begin() ; it != arrowNodes.end(); ++it)
+        {
+            osg::ref_ptr<osg::Node> arrow = mResourceSystem->getSceneManager()->getInstance(model, *it);
+            if (!ammo->getClass().getEnchantment(*ammo).empty())
+                addGlow(arrow, glowColor);
+        }
+    }
 }
 
 void ActorAnimation::itemAdded(const MWWorld::ConstPtr& item, int /*count*/)
@@ -241,6 +330,24 @@ void ActorAnimation::removeHiddenItemLight(const MWWorld::ConstPtr& item)
 
     mInsert->removeChild(iter->second);
     mItemLights.erase(iter);
+}
+
+void GetArrowNodesVisitor::apply(osg::Group& node)
+{
+    applyImpl(node);
+    traverse(node);
+}
+
+void GetArrowNodesVisitor::applyImpl(osg::Group& node)
+{
+    for (int i=0; i<std::min(mAmmoCount, 10); i++)
+    {
+        const std::string toFind = "Arrow"+std::to_string(i);
+        if (Misc::StringUtils::ciCompareLen(node.getName(), toFind, toFind.size()) == 0)
+        {
+            mArrowNodes.push_back(&node);
+        }
+    }
 }
 
 }

@@ -929,6 +929,7 @@ void NpcAnimation::showWeapons(bool showWeapon)
     }
 
     updateHolsteredWeapon(!mShowWeapons);
+    updateQuiver();
 }
 
 void NpcAnimation::showCarriedLeft(bool show)
@@ -956,11 +957,13 @@ void NpcAnimation::showCarriedLeft(bool show)
 void NpcAnimation::attachArrow()
 {
     WeaponAnimation::attachArrow(mPtr);
+    updateQuiver(true);
 }
 
 void NpcAnimation::releaseArrow(float attackStrength)
 {
     WeaponAnimation::releaseArrow(mPtr, attackStrength);
+    updateQuiver();
 }
 
 osg::Group* NpcAnimation::getArrowBone()

@@ -40,11 +40,17 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
 
     protected:
         bool mWeaponSheathing;
-        osg::Group* getHolsteredWeaponBone(std::string boneName);
+        osg::Group* getBoneByName(std::string boneName);
         virtual void updateHolsteredWeapon(bool showHolsteredWeapons);
+        virtual void updateQuiver(bool arrowAttached = false);
         virtual std::string getHolsteredWeaponBoneName(const MWWorld::ConstPtr& weapon);
-        virtual PartHolderPtr insertHolsteredWeapon(const std::string& model, const std::string& bonename,
-                                        const std::string& bonefilter, bool enchantedGlow, osg::Vec4f* glowColor);
+        virtual std::string getQuiverBoneName(const MWWorld::ConstPtr& weapon);
+        virtual PartHolderPtr getWeaponPart(const std::string& model, const std::string& bonename, bool enchantedGlow, osg::Vec4f* glowColor);
+        virtual PartHolderPtr getWeaponPart(const std::string& model, const std::string& bonename)
+        {
+            osg::Vec4f stubColor = osg::Vec4f(0,0,0,0);
+            return getWeaponPart(model, bonename, false, &stubColor);
+        };
 
     private:
         void addHiddenItemLight(const MWWorld::ConstPtr& item, const ESM::Light* esmLight);
@@ -54,6 +60,24 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
         ItemLightMap mItemLights;
         PartHolderPtr mHolsteredWeapon;
         PartHolderPtr mScabbard;
+        PartHolderPtr mQuiver;
+};
+
+class GetArrowNodesVisitor : public osg::NodeVisitor
+{
+public:
+    GetArrowNodesVisitor(int ammoCount)
+        : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+        , mAmmoCount(ammoCount)
+    {
+    }
+
+    virtual void apply(osg::Group& group);
+
+    void applyImpl(osg::Group& node);
+
+    int mAmmoCount;
+    std::vector<osg::Group*> mArrowNodes;
 };
 
 }
