@@ -46,6 +46,7 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
         virtual void updateQuiver(bool arrowAttached = false);
         virtual std::string getHolsteredWeaponBoneName(const MWWorld::ConstPtr& weapon);
         virtual std::string getQuiverBoneName(const MWWorld::ConstPtr& weapon);
+        bool hasBow();
         virtual PartHolderPtr getWeaponPart(const std::string& model, const std::string& bonename, bool enchantedGlow, osg::Vec4f* glowColor);
         virtual PartHolderPtr getWeaponPart(const std::string& model, const std::string& bonename)
         {

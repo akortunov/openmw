@@ -27,6 +27,9 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
+
+#include "../mwmechanics/creaturestats.hpp"
+
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/cellstore.hpp"
@@ -164,6 +167,25 @@ std::string ActorAnimation::getQuiverBoneName(const MWWorld::ConstPtr& weapon)
     }
 
     return boneName;
+}
+
+bool ActorAnimation::hasBow()
+{
+    if (!mPtr.getClass().hasInventoryStore(mPtr))
+        return false;
+
+    const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+    MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    if(weapon != inv.end())
+    {
+        if (weapon->getTypeName() == typeid(ESM::Weapon).name() &&
+                weapon->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::MarksmanBow)
+        {
+            return (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == MWMechanics::DrawState_Weapon);
+        }
+    }
+
+    return false;
 }
 
 void ActorAnimation::updateHolsteredWeapon(bool showHolsteredWeapons)
