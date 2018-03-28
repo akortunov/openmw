@@ -263,6 +263,7 @@ static NpcAnimation::PartBoneMap createPartListMap()
     result.insert(std::make_pair(ESM::PRT_RPauldron, "Right Clavicle"));
     result.insert(std::make_pair(ESM::PRT_LPauldron, "Left Clavicle"));
     result.insert(std::make_pair(ESM::PRT_Weapon, "Weapon Bone"));
+    result.insert(std::make_pair(ESM::PRT_WeaponLeft, "Weapon Left Bone"));
     result.insert(std::make_pair(ESM::PRT_Tail, "Tail"));
     return result;
 }
@@ -809,7 +810,7 @@ bool NpcAnimation::addOrReplaceIndividualPart(ESM::PartReferenceType type, int g
                 }
             }
         }
-        else if (type == ESM::PRT_Weapon || (type == ESM::PRT_Shield && hasBow()))
+        else if (type == ESM::PRT_Weapon || (type == ESM::PRT_WeaponLeft))
             src = mWeaponAnimationTime;
         else
             src.reset(new NullAnimationTime);
@@ -906,7 +907,7 @@ void NpcAnimation::showWeapons(bool showWeapon)
             osg::Vec4f glowColor = getEnchantmentColor(*weapon);
             std::string mesh = weapon->getClass().getModel(*weapon);
 
-            addOrReplaceIndividualPart(hasBow() ? ESM::PRT_Shield : ESM::PRT_Weapon, MWWorld::InventoryStore::Slot_CarriedRight, 1,
+            addOrReplaceIndividualPart(hasBow() ? ESM::PRT_WeaponLeft : ESM::PRT_Weapon, MWWorld::InventoryStore::Slot_CarriedRight, 1,
                                        mesh, !weapon->getClass().getEnchantment(*weapon).empty(), &glowColor);
 
             // Crossbows start out with a bolt attached
@@ -923,7 +924,7 @@ void NpcAnimation::showWeapons(bool showWeapon)
     }
     else
     {
-        removeIndividualPart(hasBow() ? ESM::PRT_Shield : ESM::PRT_Weapon);
+        removeIndividualPart(hasBow() ? ESM::PRT_WeaponLeft : ESM::PRT_Weapon);
         // If we remove/hide weapon from player, we should reset attack animation as well
         if (mPtr == MWMechanics::getPlayer())
             MWBase::Environment::get().getWorld()->getPlayer().setAttackingOrSpell(false);
@@ -938,13 +939,6 @@ void NpcAnimation::showCarriedLeft(bool show)
     mShowCarriedLeft = show;
     const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
     MWWorld::ConstContainerStoreIterator iter = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-    MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-
-    if (hasBow())
-    {
-        show = true;
-        iter = weapon;
-    }
 
     if(show && iter != inv.end())
     {
@@ -982,7 +976,7 @@ osg::Group* NpcAnimation::getArrowBone()
     PartHolderPtr part = mObjectParts[ESM::PRT_Weapon];
 
     if (hasBow())
-        part = mObjectParts[ESM::PRT_Shield];
+        part = mObjectParts[ESM::PRT_WeaponLeft];
 
     if (!part)
         return NULL;
@@ -998,7 +992,7 @@ osg::Node* NpcAnimation::getWeaponNode()
     PartHolderPtr part = mObjectParts[ESM::PRT_Weapon];
 
     if (hasBow())
-        part = mObjectParts[ESM::PRT_Shield];
+        part = mObjectParts[ESM::PRT_WeaponLeft];
 
     if (!part)
         return NULL;

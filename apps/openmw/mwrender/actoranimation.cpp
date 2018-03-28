@@ -28,12 +28,11 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 
-#include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/actorutil.hpp"
 
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/cellstore.hpp"
-#include "../mwmechanics/actorutil.hpp"
 
 #include "vismask.hpp"
 
@@ -181,7 +180,7 @@ bool ActorAnimation::hasBow()
         if (weapon->getTypeName() == typeid(ESM::Weapon).name() &&
                 weapon->get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::MarksmanBow)
         {
-            return (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == MWMechanics::DrawState_Weapon);
+            return true;
         }
     }
 

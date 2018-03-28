@@ -112,8 +112,10 @@ void CreatureWeaponAnimation::updatePart(PartHolderPtr& scene, int slot)
     MWWorld::ConstPtr item = *it;
 
     std::string bonename;
-    if (slot == MWWorld::InventoryStore::Slot_CarriedRight && !hasBow())
-        bonename = "Weapon Bone";
+    if (slot == MWWorld::InventoryStore::Slot_CarriedRight)
+    {
+        bonename = hasBow() ? "Weapon Left Bone" : "Weapon Bone";
+    }
     else
         bonename = "Shield Bone";
 

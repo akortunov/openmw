@@ -39,8 +39,9 @@ enum PartReferenceType
     PRT_LPauldron = 24,
     PRT_Weapon = 25,
     PRT_Tail = 26,
+    PRT_WeaponLeft = 27,
 
-    PRT_Count = 27
+    PRT_Count = 28
 };
 
 // Reference to body parts
