@@ -561,7 +561,7 @@ namespace MWWorld
                         bow = *invIt;
                 }
 
-                MWMechanics::projectileHit(caster, hitObject, bow, projectile, hasHit ? hitPos : newPos, it->mAttackStrength);
+                MWMechanics::projectileHit(caster, hitObject, bow, projectile, hitPos, it->mAttackStrength);
 
                 if (underwater)
                     mRendering->emitWaterRipple(newPos);
