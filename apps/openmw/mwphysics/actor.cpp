@@ -4,6 +4,11 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
+#include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
+
+#include "../mwworld/esmstore.hpp"
+
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/resource/bulletshape.hpp>
 
@@ -31,7 +36,7 @@ Actor::Actor(const MWWorld::Ptr& ptr, osg::ref_ptr<const Resource::BulletShape> 
     // Use capsule shape only if base is square (nonuniform scaling apparently doesn't work on it)
     if (std::abs(mHalfExtents.x()-mHalfExtents.y())<mHalfExtents.x()*0.05 && mHalfExtents.z() >= mHalfExtents.x())
     {
-        mShape.reset(new btCapsuleShapeZ(mHalfExtents.x(), 2*mHalfExtents.z() - 2*mHalfExtents.x()));
+        mShape.reset(new btCapsuleShapeZ(mHalfExtents.x(), (2*mHalfExtents.z() - 2*mHalfExtents.x())));
         mRotationallyInvariant = true;
     }
     else
@@ -158,6 +163,17 @@ void Actor::updateScale()
 {
     float scale = mPtr.getCellRef().getScale();
     osg::Vec3f scaleVec(scale,scale,scale);
+
+    // we should take NPC height in account
+    float height = 1.0f;
+    if (mPtr.getClass().isNpc())
+    {
+        const MWWorld::ESMStore &esmStore = MWBase::Environment::get().getWorld()->getStore();
+        const ESM::NPC *npc = mPtr.get<ESM::NPC>()->mBase;
+        const ESM::Race *race = esmStore.get<ESM::Race>().find(npc->mRace);
+        height = npc->isMale() ? race->mData.mHeight.mMale : race->mData.mHeight.mFemale;
+        scaleVec[2]*=height;
+    }
 
     mPtr.getClass().adjustScale(mPtr, scaleVec, false);
     mScale = scaleVec;
