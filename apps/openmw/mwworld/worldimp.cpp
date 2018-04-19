@@ -3434,6 +3434,36 @@ namespace MWWorld
         osg::Vec3f weaponPos = actor.getRefData().getPosition().asVec3();
         weaponPos.z() += mPhysics->getHalfExtents(actor).z() * 2 * 0.75;
         osg::Vec3f targetPos = mPhysics->getCollisionObjectPosition(target);
+
+        float height = 0.0f;
+
+        if (target.getClass().isNpc())
+        {
+            int dice = Misc::Rng::rollDice(100);
+            float zExtents = mPhysics->getHalfExtents(target).z();
+            // head
+            if (dice >= 90)
+            {
+                // Only bipedal actors can aim to head - other actors can have too small height
+                if (actor.getClass().isBipedal(actor))
+                    height = zExtents * 0.8f;
+                else
+                    height = zExtents * -0.5f;
+            }
+            // groin
+            else if (dice >= 40)
+            {
+                height = zExtents * 0.5f;
+            }
+            // legs
+            else if (dice < 10)
+            {
+                height = zExtents * -0.5f;
+            }
+            // default - chest
+        }
+        targetPos.z() += height;
+
         return (targetPos - weaponPos);
     }
 
