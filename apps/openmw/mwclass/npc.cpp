@@ -895,49 +895,43 @@ namespace MWClass
 
             osg::Vec3f leftToRightDirection = target.getRefData().getBaseNode()->getAttitude() * osg::Vec3f(1,0,0);
             float angleDegrees = osg::RadiansToDegrees(MWMechanics::signedAngleRadians(-hitOffset, leftToRightDirection, osg::Vec3f(0,0,1)));
+            bool isFront = angleDegrees >= -120 && angleDegrees <= -60;
+            bool isLeft = angleDegrees > -60 && angleDegrees < 60;
+            bool isBack = angleDegrees >= 60 && angleDegrees <= 120;
+            bool isRight = angleDegrees > 120 || angleDegrees < -120;
 
-            if (hitOffset.z() >= offset.z()*0.85f)
+            if (hitOffset.z() >= offset.z()*0.9f && (isFront || isBack))
             {
                 MWBase::Environment::get().getWindowManager()->messageBox("Head");
                 return MWWorld::InventoryStore::Slot_Helmet;
             }
-            else if (hitOffset.z() >= offset.z()*0.6f && hitOffset.z() < offset.z()*0.85f)
+            else if (hitOffset.z() >= offset.z()*0.75f && isLeft)
             {
-                if (hitOffset.z() <= offset.z()*0.8f)
-                {
-                    if (angleDegrees >= -45 && angleDegrees <= 45)
-                    {
-                        MWBase::Environment::get().getWindowManager()->messageBox("Left Pauldron");
-                        return MWWorld::InventoryStore::Slot_LeftPauldron;
-                    }
-
-                    if (angleDegrees >= 135 || angleDegrees <= -135)
-                    {
-                        MWBase::Environment::get().getWindowManager()->messageBox("Right Pauldron");
-                        return MWWorld::InventoryStore::Slot_RightPauldron;
-                    }
-                }
-
+                MWBase::Environment::get().getWindowManager()->messageBox("Left Pauldron");
+                return MWWorld::InventoryStore::Slot_LeftPauldron;
+            }
+            else if (hitOffset.z() >= offset.z()*0.75f && isRight)
+            {
+                MWBase::Environment::get().getWindowManager()->messageBox("Right Pauldron");
+                return MWWorld::InventoryStore::Slot_RightPauldron;
+            }
+            else if (hitOffset.z() >= offset.z()*0.65f && (isFront || isBack))
+            {
                 MWBase::Environment::get().getWindowManager()->messageBox("Chest");
                 return MWWorld::InventoryStore::Slot_Cuirass;
             }
-            else if (hitOffset.z() >= offset.z()*0.3f && hitOffset.z() < offset.z()*0.6f)
+            else if (hitOffset.z() >= offset.z()*0.45f && hitOffset.z() < offset.z()*0.75f && isLeft)
             {
-                if (hitOffset.z() >= offset.z()*0.5f)
-                {
-                    if (angleDegrees >= -45 && angleDegrees <= 45)
-                    {
-                        MWBase::Environment::get().getWindowManager()->messageBox("Left Gauntlet");
-                        return MWWorld::InventoryStore::Slot_LeftGauntlet;
-                    }
-
-                    if (angleDegrees >= 135 || angleDegrees <= -135)
-                    {
-                        MWBase::Environment::get().getWindowManager()->messageBox("Right Gauntlet");
-                        return MWWorld::InventoryStore::Slot_RightGauntlet;
-                    }
-                }
-
+                MWBase::Environment::get().getWindowManager()->messageBox("Left Gauntlet");
+                return MWWorld::InventoryStore::Slot_LeftGauntlet;
+            }
+            else if (hitOffset.z() >= offset.z()*0.45f && hitOffset.z() < offset.z()*0.75f && isRight)
+            {
+                MWBase::Environment::get().getWindowManager()->messageBox("Right Gauntlet");
+                return MWWorld::InventoryStore::Slot_RightGauntlet;
+            }
+            else if (hitOffset.z() >= offset.z()*0.3f && hitOffset.z() < offset.z()*0.65f && (isFront || isBack))
+            {
                 MWBase::Environment::get().getWindowManager()->messageBox("Groin");
                 return MWWorld::InventoryStore::Slot_Greaves;
             }

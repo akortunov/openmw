@@ -3439,28 +3439,41 @@ namespace MWWorld
 
         if (target.getClass().isNpc())
         {
+            const int greaves = InventoryStore::Slot_Greaves;
+            const int cuirass = InventoryStore::Slot_Cuirass;
+            const int helmet = InventoryStore::Slot_Helmet;
+
+            std::map<int, int> hitThresholds = {
+                { greaves, 10 },
+                { cuirass, 40 },
+                { helmet,  90 }};
+
+            // Only bipedal actors can aim to head - other actors can have too small height
+            if (!actor.getClass().isBipedal(actor))
+            {
+                hitThresholds[greaves] += 10;
+                hitThresholds[cuirass] += 10;
+                hitThresholds[helmet] += 10;
+            }
+            else
+            {
+                //TODO: aim to weakest limb
+            }
+
             int dice = Misc::Rng::rollDice(100);
             float zExtents = mPhysics->getHalfExtents(target).z();
             // head
-            if (dice >= 90)
-            {
-                // Only bipedal actors can aim to head - other actors can have too small height
-                if (actor.getClass().isBipedal(actor))
-                    height = zExtents * 0.8f;
-                else
-                    height = zExtents * -0.5f;
-            }
-            // groin
-            else if (dice >= 40)
-            {
+            if (dice >= hitThresholds[helmet])
+                height = zExtents * 0.8f;
+            // chest
+            else if (dice >= hitThresholds[cuirass])
                 height = zExtents * 0.5f;
-            }
-            // legs
-            else if (dice < 10)
-            {
+            // groin
+            else if (dice >= hitThresholds[greaves])
+                height = zExtents * -0.1f;
+            // boots
+            else
                 height = zExtents * -0.5f;
-            }
-            // default - chest
         }
         targetPos.z() += height;
 
