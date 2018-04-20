@@ -429,8 +429,7 @@ namespace MWGui
             std::make_pair(std::string("Groin"), MWWorld::InventoryStore::Slot_Greaves),
             std::make_pair(std::string("Legs"), MWWorld::InventoryStore::Slot_Boots),
             std::make_pair(std::string("Left arm"), MWWorld::InventoryStore::Slot_LeftGauntlet),
-            std::make_pair(std::string("Right arm"), MWWorld::InventoryStore::Slot_RightGauntlet),
-            std::make_pair(std::string("Shield"), MWWorld::InventoryStore::Slot_CarriedLeft)
+            std::make_pair(std::string("Right arm"), MWWorld::InventoryStore::Slot_RightGauntlet)
         };
 
         for (unsigned int i = 0; i < sMapping.size(); i++)

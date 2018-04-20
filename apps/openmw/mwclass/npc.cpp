@@ -950,19 +950,18 @@ namespace MWClass
 
         // Hit percentages:
         // cuirass = 30%
-        // shield, helmet, greaves, boots, pauldrons = 10% each
-        // guantlets = 5% each
+        // other = 10% each
         static const int hitslots[20] = {
             MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
             MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
             MWWorld::InventoryStore::Slot_Cuirass, MWWorld::InventoryStore::Slot_Cuirass,
-            MWWorld::InventoryStore::Slot_CarriedLeft, MWWorld::InventoryStore::Slot_CarriedLeft,
             MWWorld::InventoryStore::Slot_Helmet, MWWorld::InventoryStore::Slot_Helmet,
             MWWorld::InventoryStore::Slot_Greaves, MWWorld::InventoryStore::Slot_Greaves,
             MWWorld::InventoryStore::Slot_Boots, MWWorld::InventoryStore::Slot_Boots,
             MWWorld::InventoryStore::Slot_LeftPauldron, MWWorld::InventoryStore::Slot_LeftPauldron,
             MWWorld::InventoryStore::Slot_RightPauldron, MWWorld::InventoryStore::Slot_RightPauldron,
-            MWWorld::InventoryStore::Slot_LeftGauntlet, MWWorld::InventoryStore::Slot_RightGauntlet
+            MWWorld::InventoryStore::Slot_LeftGauntlet, MWWorld::InventoryStore::Slot_LeftGauntlet,
+            MWWorld::InventoryStore::Slot_RightGauntlet, MWWorld::InventoryStore::Slot_RightGauntlet
         };
         int hitslot = hitslots[Misc::Rng::rollDice(20)];
         return hitslot;
@@ -1218,12 +1217,11 @@ namespace MWClass
         if (slot == MWWorld::InventoryStore::Slot_NoSlot)
         {
             return ratings[MWWorld::InventoryStore::Slot_Cuirass] * 0.3f
-                    + (ratings[MWWorld::InventoryStore::Slot_CarriedLeft] + ratings[MWWorld::InventoryStore::Slot_Helmet]
+                    + (ratings[MWWorld::InventoryStore::Slot_Helmet]
                         + ratings[MWWorld::InventoryStore::Slot_Greaves] + ratings[MWWorld::InventoryStore::Slot_Boots]
                         + ratings[MWWorld::InventoryStore::Slot_LeftPauldron] + ratings[MWWorld::InventoryStore::Slot_RightPauldron]
+                        + ratings[MWWorld::InventoryStore::Slot_LeftGauntlet] + ratings[MWWorld::InventoryStore::Slot_RightGauntlet]
                         ) * 0.1f
-                    + (ratings[MWWorld::InventoryStore::Slot_LeftGauntlet] + ratings[MWWorld::InventoryStore::Slot_RightGauntlet])
-                        * 0.05f
                     + shield;
         }
 

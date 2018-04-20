@@ -231,8 +231,10 @@ namespace MWClass
                 typeText = "#{sHeavy}";
         }
 
-        text += "\n#{sArmorRating}: " + MWGui::ToolTips::toString(static_cast<int>(getEffectiveArmorRating(ptr,
-            MWMechanics::getPlayer())));
+        if (ref->mBase->mData.mType == ESM::Armor::Shield)
+            typeText = "#{sSkillBlock}";
+        else
+            text += "\n#{sArmorRating}: " + MWGui::ToolTips::toString(static_cast<int>(getEffectiveArmorRating(ptr, MWMechanics::getPlayer())));
 
         int remainingHealth = getItemHealth(ptr);
         text += "\n#{sCondition}: " + MWGui::ToolTips::toString(remainingHealth) + "/"
@@ -287,10 +289,11 @@ namespace MWClass
         const MWBase::World *world = MWBase::Environment::get().getWorld();
         int iBaseArmorSkill = world->getStore().get<ESM::GameSetting>().find("iBaseArmorSkill")->getInt();
 
-        if(ref->mBase->mData.mWeight == 0)
-            return ref->mBase->mData.mArmor;
-        else
-            return ref->mBase->mData.mArmor * armorSkill / static_cast<float>(iBaseArmorSkill);
+        float armorRating = ref->mBase->mData.mArmor;
+        if(ref->mBase->mData.mWeight != 0)
+            armorRating *= (armorSkill / static_cast<float>(iBaseArmorSkill));
+
+        return armorRating;
     }
 
     std::pair<int, std::string> Armor::canBeEquipped(const MWWorld::ConstPtr &ptr, const MWWorld::Ptr &npc) const
