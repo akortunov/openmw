@@ -2397,7 +2397,7 @@ void CharacterController::setActive(int active)
     mAnimation->setActive(active);
 }
 
-void CharacterController::setHeadTrackTarget(const MWWorld::ConstPtr &target)
+void CharacterController::setHeadTrackTarget(const MWWorld::Ptr &target)
 {
     mHeadTrackTarget = target;
 }

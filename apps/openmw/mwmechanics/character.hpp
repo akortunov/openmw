@@ -196,7 +196,7 @@ class CharacterController : public MWRender::Animation::TextKeyListener
     float mSecondsOfSwimming;
     float mSecondsOfRunning;
 
-    MWWorld::ConstPtr mHeadTrackTarget;
+    MWWorld::Ptr mHeadTrackTarget;
 
     float mTurnAnimationThreshold; // how long to continue playing turning animation after actor stopped turning
 
@@ -295,7 +295,7 @@ public:
     void setActive(int active);
 
     /// Make this character turn its head towards \a target. To turn off head tracking, pass an empty Ptr.
-    void setHeadTrackTarget(const MWWorld::ConstPtr& target);
+    void setHeadTrackTarget(const MWWorld::Ptr& target);
 
     void playSwishSound(float attackStrength);
 };

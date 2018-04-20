@@ -3429,7 +3429,7 @@ namespace MWWorld
         return false;
     }
 
-    osg::Vec3f World::aimToTarget(const ConstPtr &actor, const MWWorld::ConstPtr& target)
+    osg::Vec3f World::aimToTarget(const Ptr &actor, const MWWorld::Ptr& target)
     {
         osg::Vec3f weaponPos = actor.getRefData().getPosition().asVec3();
         weaponPos.z() += mPhysics->getHalfExtents(actor).z() * 2 * 0.75;
@@ -3439,41 +3439,48 @@ namespace MWWorld
 
         if (target.getClass().isNpc())
         {
-            const int greaves = InventoryStore::Slot_Greaves;
-            const int cuirass = InventoryStore::Slot_Cuirass;
-            const int helmet = InventoryStore::Slot_Helmet;
-
-            std::map<int, int> hitThresholds = {
-                { greaves, 10 },
-                { cuirass, 40 },
-                { helmet,  90 }};
+            float dice = Misc::Rng::rollClosedProbability() * 2 - 1;
 
             // Only bipedal actors can aim to head - other actors can have too small height
             if (!actor.getClass().isBipedal(actor))
             {
-                hitThresholds[greaves] += 10;
-                hitThresholds[cuirass] += 10;
-                hitThresholds[helmet] += 10;
+                if (dice >= 0.8f)
+                    dice -= 1.6f;
             }
-            else
+            else if (Misc::Rng::rollDice(100) < 25)
             {
-                //TODO: aim to weakest limb
+                float lowestArmor = target.getClass().getArmorRating(target);
+
+                float currentArmor = target.getClass().getArmorRating(target, InventoryStore::Slot_Cuirass);
+                if (currentArmor < lowestArmor)
+                {
+                    dice = 0.5f;
+                    lowestArmor = currentArmor;
+                }
+
+                currentArmor = target.getClass().getArmorRating(target, InventoryStore::Slot_Greaves);
+                if (currentArmor < lowestArmor)
+                {
+                    dice = -0.1f;
+                    lowestArmor = currentArmor;
+                }
+
+                currentArmor = target.getClass().getArmorRating(target, InventoryStore::Slot_Helmet);
+                if (currentArmor < lowestArmor)
+                {
+                    dice = 0.9f;
+                    lowestArmor = currentArmor;
+                }
+
+                currentArmor = target.getClass().getArmorRating(target, InventoryStore::Slot_Boots);
+                if (currentArmor < lowestArmor)
+                {
+                    dice = -0.85;
+                    lowestArmor = currentArmor;
+                }
             }
 
-            int dice = Misc::Rng::rollDice(100);
-            float zExtents = mPhysics->getHalfExtents(target).z();
-            // head
-            if (dice >= hitThresholds[helmet])
-                height = zExtents * 0.8f;
-            // chest
-            else if (dice >= hitThresholds[cuirass])
-                height = zExtents * 0.5f;
-            // groin
-            else if (dice >= hitThresholds[greaves])
-                height = zExtents * -0.1f;
-            // boots
-            else
-                height = zExtents * -0.5f;
+            height = mPhysics->getHalfExtents(target).z() * dice;
         }
         targetPos.z() += height;
 

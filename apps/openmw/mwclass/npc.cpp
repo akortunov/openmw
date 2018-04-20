@@ -930,7 +930,7 @@ namespace MWClass
                 MWBase::Environment::get().getWindowManager()->messageBox("Right Gauntlet");
                 return MWWorld::InventoryStore::Slot_RightGauntlet;
             }
-            else if (hitOffset.z() >= offset.z()*0.3f && hitOffset.z() < offset.z()*0.65f && (isFront || isBack))
+            else if (hitOffset.z() >= offset.z()*0.3f && hitOffset.z() < offset.z()*0.65f)
             {
                 MWBase::Environment::get().getWindowManager()->messageBox("Groin");
                 return MWWorld::InventoryStore::Slot_Greaves;
@@ -940,6 +940,8 @@ namespace MWClass
                 MWBase::Environment::get().getWindowManager()->messageBox("Boots");
                 return MWWorld::InventoryStore::Slot_Boots;
             }
+            else
+                std::cout << "Warning: " << (hitOffset.z()/offset.z()) << " " << angleDegrees << std::endl;
         }
 
         // Hit percentages:
