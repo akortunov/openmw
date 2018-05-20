@@ -42,6 +42,7 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
         bool mWeaponSheathing;
         osg::Group* getBoneByName(std::string boneName);
         virtual void updateHolsteredWeapon(bool showHolsteredWeapons);
+        virtual void updateHolsteredShield(bool showCarriedLeft);
         virtual void updateQuiver(bool arrowAttached = false);
         virtual std::string getHolsteredWeaponBoneName(const MWWorld::ConstPtr& weapon);
         virtual std::string getQuiverBoneName(const MWWorld::ConstPtr& weapon);
@@ -59,6 +60,7 @@ class ActorAnimation : public Animation, public MWWorld::ContainerStoreListener
         typedef std::map<MWWorld::ConstPtr, osg::ref_ptr<SceneUtil::LightSource> > ItemLightMap;
         ItemLightMap mItemLights;
         PartHolderPtr mHolsteredWeapon;
+        PartHolderPtr mHolsteredShield;
         PartHolderPtr mScabbard;
         PartHolderPtr mQuiver;
 };

@@ -1179,6 +1179,36 @@ bool CharacterController::updateCreatureState()
 
 bool CharacterController::updateCarriedLeftVisible(WeaponType weaptype) const
 {
+    const MWWorld::Class &cls = mPtr.getClass();
+    CreatureStats &stats = cls.getCreatureStats(mPtr);
+    if(stats.getDrawState() != DrawState_Weapon)
+        return false;
+
+    if (cls.hasInventoryStore(mPtr) && weaptype != WeapType_Spell)
+    {
+        const MWWorld::InventoryStore& inv = cls.getInventoryStore(mPtr);
+        const MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if(weapon != inv.end())
+        {
+            const std::string &type = weapon->getTypeName();
+            if(type == typeid(ESM::Weapon).name())
+            {
+                const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon->get<ESM::Weapon>();
+                ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+                switch(weaponType)
+                {
+                    case ESM::Weapon::ShortBladeOneHand:
+                    case ESM::Weapon::LongBladeOneHand:
+                    case ESM::Weapon::BluntOneHand:
+                    case ESM::Weapon::AxeOneHand:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+    }
+
     // Shields/torches shouldn't be visible during any operation involving two hands
     // There seems to be no text keys for this purpose, except maybe for "[un]equip start/stop",
     // but they are also present in weapon drawing animation.

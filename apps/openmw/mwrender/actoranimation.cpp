@@ -64,6 +64,7 @@ ActorAnimation::~ActorAnimation()
 
     mScabbard.reset();
     mHolsteredWeapon.reset();
+    mHolsteredShield.reset();
 }
 
 PartHolderPtr ActorAnimation::getWeaponPart(const std::string& model, const std::string& bonename, bool enchantedGlow, osg::Vec4f* glowColor)
@@ -199,6 +200,37 @@ void ActorAnimation::updateHolsteredWeapon(bool showHolsteredWeapons)
         return;
 
     mScabbard = getWeaponPart(scabbardName, boneName, false, &glowColor);
+}
+
+void ActorAnimation::updateHolsteredShield(bool showCarriedLeft)
+{
+    if (!mWeaponSheathing)
+        return;
+
+    if (!mPtr.getClass().hasInventoryStore(mPtr))
+        return;
+
+    mHolsteredShield.reset();
+
+    const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+    MWWorld::ConstContainerStoreIterator shield = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+    if (shield == inv.end())
+        return;
+
+    if (shield->getTypeName() != typeid(ESM::Armor).name())
+        return;
+
+    osg::Vec4f glowColor = getEnchantmentColor(*shield);
+    std::string mesh = shield->getClass().getModel(*shield);
+    std::string boneName = "Bip01 Shield";
+    if (mesh.empty() || boneName.empty())
+        return;
+
+    if (!showCarriedLeft && !boneName.empty())
+    {
+        bool isEnchanted = !shield->getClass().getEnchantment(*shield).empty();
+        mHolsteredShield = getWeaponPart(mesh, boneName, isEnchanted, &glowColor);
+    }
 }
 
 void ActorAnimation::updateQuiver(bool arrowAttached)

@@ -952,6 +952,8 @@ void NpcAnimation::showCarriedLeft(bool show)
     }
     else
         removeIndividualPart(ESM::PRT_Shield);
+
+    updateHolsteredShield(mShowCarriedLeft);
 }
 
 void NpcAnimation::attachArrow()
