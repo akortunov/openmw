@@ -189,7 +189,7 @@ namespace MWMechanics
             MWBase::Environment::get().getWindowManager()->messageBox("#{sMagicTargetResistsWeapons}");
     }
 
-    void projectileHit(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, MWWorld::Ptr weapon, const MWWorld::Ptr& projectile,
+    void projectileHit(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, MWWorld::Ptr weapon, MWWorld::Ptr& projectile,
                        const osg::Vec3f& hitPosition, float attackStrength)
     {
         MWBase::World *world = MWBase::Environment::get().getWorld();
@@ -239,6 +239,15 @@ namespace MWMechanics
         bool appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, weapon, hitPosition, true);
         if (weapon != projectile)
             appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
+
+        /*
+        if (weapon == projectile)
+            applyPoison(attacker, victim, weapon, hitPosition);
+        else
+            applyPoison(attacker, victim, projectile, hitPosition);
+        */
+
+        applyPoison(attacker, victim, weapon, hitPosition);
 
         if (validVictim)
         {

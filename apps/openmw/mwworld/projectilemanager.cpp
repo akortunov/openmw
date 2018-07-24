@@ -504,7 +504,8 @@ namespace MWWorld
                 MWWorld::ManualRef projectileRef(MWBase::Environment::get().getWorld()->getStore(), it->mIdArrow);
 
                 // Try to get a Ptr to the bow that was used. It might no longer exist.
-                MWWorld::Ptr bow = projectileRef.getPtr();
+                MWWorld::Ptr ammo = projectileRef.getPtr();
+                MWWorld::Ptr bow = ammo;
                 if (!caster.isEmpty() && it->mIdArrow != it->mBowId)
                 {
                     MWWorld::InventoryStore& inv = caster.getClass().getInventoryStore(caster);
@@ -516,7 +517,7 @@ namespace MWWorld
                 if (caster.isEmpty())
                     caster = result.mHitObject;
 
-                MWMechanics::projectileHit(caster, result.mHitObject, bow, projectileRef.getPtr(), result.mHit ? result.mHitPos : newPos, it->mAttackStrength);
+                MWMechanics::projectileHit(caster, result.mHitObject, bow, ammo, result.mHit ? result.mHitPos : newPos, it->mAttackStrength);
 
                 if (underwater)
                     mRendering->emitWaterRipple(newPos);
