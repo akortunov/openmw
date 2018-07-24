@@ -103,6 +103,7 @@ namespace MWMechanics
         bool cast (const ESM::Ingredient* ingredient);
 
         bool cast (const ESM::Potion* potion);
+        bool cast (const ESM::Potion* potion, bool poison);
 
         /// @note Auto detects if spell, ingredient or potion
         bool cast (const std::string& id);

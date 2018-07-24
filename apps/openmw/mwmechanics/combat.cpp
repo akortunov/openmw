@@ -59,9 +59,9 @@ namespace MWMechanics
         {
             const ESM::Potion* poison = MWBase::Environment::get().getWorld()->getStore().get<ESM::Potion>().find(poisonName);
 
-            MWMechanics::CastSpell cast(victim, victim);
+            MWMechanics::CastSpell cast(attacker, victim);
             cast.mHitPosition = hitPosition;
-            cast.cast(poison);
+            cast.cast(poison, true);
 
             weapon.getCellRef().setPoison("");
             return true;

@@ -843,11 +843,19 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::Potion* potion)
     {
+        return CastSpell::cast(potion, false);
+    }
+
+    bool CastSpell::cast(const ESM::Potion* potion, bool poison)
+    {
         mSourceName = potion->mName;
         mId = potion->mId;
         mStack = true;
 
-        inflict(mCaster, mCaster, potion->mEffects, ESM::RT_Self);
+        if (poison)
+            inflict(mTarget, mCaster, potion->mEffects, ESM::RT_Self);
+        else
+            inflict(mCaster, mCaster, potion->mEffects, ESM::RT_Self);
 
         return true;
     }
