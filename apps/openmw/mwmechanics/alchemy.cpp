@@ -33,6 +33,26 @@ MWMechanics::Alchemy::Alchemy()
 {
 }
 
+bool MWMechanics::Alchemy::isPoison() const
+{
+    std::set<EffectKey> effects (listEffects());
+    for (std::set<EffectKey>::const_iterator effectIt (effects.begin()); effectIt!=effects.end(); ++effectIt)
+    {
+        const ESM::MagicEffect *magicEffect =
+            MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find (
+            effectIt->mId);
+
+        if (magicEffect->mData.mFlags & ESM::MagicEffect::Harmful)
+        {
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
 std::set<MWMechanics::EffectKey> MWMechanics::Alchemy::listEffects() const
 {
     std::map<EffectKey, int> effects;
@@ -72,8 +92,9 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
     bool magnitude = !(flags & ESM::MagicEffect::NoMagnitude);
     bool duration = !(flags & ESM::MagicEffect::NoDuration);
     bool negative = (flags & ESM::MagicEffect::Harmful) != 0;
+    bool decreaseMagnitude = negative && !isPoison();
 
-    int tool = negative ? ESM::Apparatus::Alembic : ESM::Apparatus::Retort;
+    int tool = decreaseMagnitude ? ESM::Apparatus::Alembic : ESM::Apparatus::Retort;
 
     int setup = 0;
 
@@ -96,14 +117,14 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
     {
         case 1:
 
-            quality = negative ? 2 * toolQuality + 3 * calcinatorQuality :
+            quality = decreaseMagnitude ? 2 * toolQuality + 3 * calcinatorQuality :
                 (magnitude && duration ?
                 2 * toolQuality + calcinatorQuality : 2/3.0f * (toolQuality + calcinatorQuality) + 0.5f);
             break;
 
         case 2:
 
-            quality = negative ? 1+toolQuality : (magnitude && duration ? toolQuality : toolQuality + 0.5f);
+            quality = decreaseMagnitude ? 1+toolQuality : (magnitude && duration ? toolQuality : toolQuality + 0.5f);
             break;
 
         case 3:
@@ -112,7 +133,7 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
             break;
     }
 
-    if (setup==3 || !negative)
+    if (setup==3 || !decreaseMagnitude)
     {
         value += quality;
     }
