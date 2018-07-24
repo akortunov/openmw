@@ -3,6 +3,7 @@
 #include "class.hpp"
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/inventorystore.hpp"
@@ -40,13 +41,18 @@ namespace MWWorld
         actor.getClass().getContainerStore(actor).remove(getTarget(), 1, actor);
     }
 
+
     ActionPoison::ActionPoison (const Ptr& object, const std::string& id)
     : Action (false, object), mId (id)
     {}
 
     void ActionPoison::executeImp (const Ptr& actor)
     {
-        MWBase::Environment::get().getWorld()->breakInvisibility(actor);
+        if(actor == MWMechanics::getPlayer() && MWMechanics::isPlayerInCombat())
+        { // Player can not use poisons in combat
+            MWBase::Environment::get().getWindowManager()->messageBox("#{sInventoryMessage3}");
+            return;
+        }
 
         const MWWorld::Class& targetClass = actor.getClass();
         if (targetClass.hasInventoryStore(actor))
