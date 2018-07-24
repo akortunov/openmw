@@ -36,7 +36,6 @@ namespace MWClass
                 MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find (
                 effectIt->mEffectID);
 
-            // Re-casting a bound equipment effect has no effect if the spell is still active
             if (magicEffect->mData.mFlags & ESM::MagicEffect::Harmful)
             {
                 continue;
@@ -97,6 +96,11 @@ namespace MWClass
         const MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
 
         return ref->mBase->mData.mValue;
+    }
+
+    std::string Potion::getPoison (const MWWorld::ConstPtr& ptr) const
+    {
+        return isPoison(ptr) ? ptr.getCellRef().getRefId() : "";
     }
 
     void Potion::registerSelf()

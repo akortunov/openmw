@@ -72,6 +72,8 @@ namespace MWMechanics
 
             float getAlchemyFactor() const;
 
+            bool isPoison() const;
+
             int countIngredients() const;
 
             TEffectsIterator beginEffects() const;
