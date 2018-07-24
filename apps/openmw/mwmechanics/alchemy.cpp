@@ -9,6 +9,7 @@
 #include <map>
 
 #include <components/misc/rng.hpp>
+#include <components/settings/settings.hpp>
 
 #include <components/esm/loadskil.hpp>
 #include <components/esm/loadappa.hpp>
@@ -35,6 +36,10 @@ MWMechanics::Alchemy::Alchemy()
 
 bool MWMechanics::Alchemy::isPoison() const
 {
+    static const bool poisonsEnabled = Settings::Manager::getBool("poisons", "Game");
+    if (!poisonsEnabled)
+        return false;
+
     std::set<EffectKey> effects (listEffects());
     for (std::set<EffectKey>::const_iterator effectIt (effects.begin()); effectIt!=effects.end(); ++effectIt)
     {
@@ -92,9 +97,9 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
     bool magnitude = !(flags & ESM::MagicEffect::NoMagnitude);
     bool duration = !(flags & ESM::MagicEffect::NoDuration);
     bool negative = (flags & ESM::MagicEffect::Harmful) != 0;
-    bool decreaseMagnitude = negative && !isPoison();
+    bool decreaseNegative = negative && !isPoison();
 
-    int tool = decreaseMagnitude ? ESM::Apparatus::Alembic : ESM::Apparatus::Retort;
+    int tool = decreaseNegative ? ESM::Apparatus::Alembic : ESM::Apparatus::Retort;
 
     int setup = 0;
 
@@ -117,14 +122,14 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
     {
         case 1:
 
-            quality = decreaseMagnitude ? 2 * toolQuality + 3 * calcinatorQuality :
+            quality = decreaseNegative ? 2 * toolQuality + 3 * calcinatorQuality :
                 (magnitude && duration ?
                 2 * toolQuality + calcinatorQuality : 2/3.0f * (toolQuality + calcinatorQuality) + 0.5f);
             break;
 
         case 2:
 
-            quality = decreaseMagnitude ? 1+toolQuality : (magnitude && duration ? toolQuality : toolQuality + 0.5f);
+            quality = decreaseNegative ? 1+toolQuality : (magnitude && duration ? toolQuality : toolQuality + 0.5f);
             break;
 
         case 3:
@@ -133,7 +138,7 @@ void MWMechanics::Alchemy::applyTools (int flags, float& value) const
             break;
     }
 
-    if (setup==3 || !decreaseMagnitude)
+    if (setup==3 || !decreaseNegative)
     {
         value += quality;
     }
