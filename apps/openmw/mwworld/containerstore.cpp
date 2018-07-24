@@ -245,6 +245,8 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2)
 
         && ptr1.getClass().getRemainingUsageTime(ptr1) == ptr2.getClass().getRemainingUsageTime(ptr2)
 
+        && cls1.getPoison(ptr1) == cls2.getPoison(ptr2)
+
         && cls1.getScript(ptr1) == cls2.getScript(ptr2)
 
         // item that is already partly used up never stacks
