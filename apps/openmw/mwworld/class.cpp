@@ -295,6 +295,11 @@ namespace MWWorld
         return "";
     }
 
+    std::string Class::getPoison (const ConstPtr& ptr) const
+    {
+        return "";
+    }
+
     void Class::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
     {
     }

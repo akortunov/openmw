@@ -65,6 +65,9 @@ namespace MWClass
             virtual std::string getEnchantment (const MWWorld::ConstPtr& ptr) const;
             ///< @return the enchantment ID if the object is enchanted, otherwise an empty string
 
+            virtual std::string getPoison (const MWWorld::ConstPtr& ptr) const;
+            ///< @return the poison ID if the object has it, otherwise an empty string
+
             virtual std::string applyEnchantment(const MWWorld::ConstPtr &ptr, const std::string& enchId, int enchCharge, const std::string& newName) const;
             ///< Creates a new record using \a ptr as template, with the given name and the given enchantment applied to it.
 

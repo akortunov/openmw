@@ -257,6 +257,10 @@ namespace MWWorld
             ///< @return the enchantment ID if the object is enchanted, otherwise an empty string
             /// (default implementation: return empty string)
 
+            virtual std::string getPoison (const MWWorld::ConstPtr& ptr) const;
+            ///< @return the poison ID if the object has it, otherwise an empty string
+            /// (default implementation: return empty string)
+
             virtual int getEnchantmentPoints (const MWWorld::ConstPtr& ptr) const;
             ///< @return the number of enchantment points available for possible enchanting
 

@@ -5,7 +5,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 
-#include "../mwworld/containerstore.hpp"
+#include "../mwworld/inventorystore.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 
@@ -38,5 +38,27 @@ namespace MWWorld
             actor.getClass().skillUsageSucceeded (actor, mSkillIndex, mUsageType);
 
         actor.getClass().getContainerStore(actor).remove(getTarget(), 1, actor);
+    }
+
+    ActionPoison::ActionPoison (const Ptr& object, const std::string& id)
+    : Action (false, object), mId (id)
+    {}
+
+    void ActionPoison::executeImp (const Ptr& actor)
+    {
+        MWBase::Environment::get().getWorld()->breakInvisibility(actor);
+
+        const MWWorld::Class& targetClass = actor.getClass();
+        if (targetClass.hasInventoryStore(actor))
+        {
+            MWWorld::ContainerStoreIterator weapon = targetClass.getInventoryStore(actor).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+
+            // apply poison to weapon
+            if (weapon != targetClass.getInventoryStore(actor).end())
+            {
+                weapon->getCellRef().setPoison(mId);
+                actor.getClass().getContainerStore(actor).remove(getTarget(), 1, actor);
+            }
+        }
     }
 }

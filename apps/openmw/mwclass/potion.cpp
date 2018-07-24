@@ -10,6 +10,7 @@
 #include "../mwworld/actiontake.hpp"
 #include "../mwworld/actionapply.hpp"
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/failedaction.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -24,6 +25,28 @@
 
 namespace MWClass
 {
+    bool Potion::isPoison(const MWWorld::Ptr& ptr) const
+    {
+        const MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
+
+        for (std::vector<ESM::ENAMstruct>::const_iterator effectIt (ref->mBase->mEffects.mList.begin());
+             effectIt != ref->mBase->mEffects.mList.end(); ++effectIt)
+        {
+            const ESM::MagicEffect *magicEffect =
+                MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find (
+                effectIt->mEffectID);
+
+            // Re-casting a bound equipment effect has no effect if the spell is still active
+            if (magicEffect->mData.mFlags & ESM::MagicEffect::Harmful)
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
 
     void Potion::insertObjectRendering (const MWWorld::Ptr& ptr, const std::string& model, MWRender::RenderingInterface& renderingInterface) const
     {
@@ -144,12 +167,24 @@ namespace MWClass
         MWWorld::LiveCellRef<ESM::Potion> *ref =
             ptr.get<ESM::Potion>();
 
-        std::shared_ptr<MWWorld::Action> action (
-            new MWWorld::ActionApply (ptr, ref->mBase->mId));
+        if (isPoison(ptr))
+        {
+            std::shared_ptr<MWWorld::Action> action (
+                new MWWorld::ActionPoison (ptr, ref->mBase->mId));
 
-        action->setSound ("Drink");
+            return action;
+        }
+        else
+        {
+            std::shared_ptr<MWWorld::Action> action (
+                new MWWorld::ActionApply (ptr, ref->mBase->mId));
 
-        return action;
+            action->setSound ("Drink");
+
+            return action;
+        }
+
+        return std::shared_ptr<MWWorld::Action>(new MWWorld::FailedAction(""));
     }
 
     MWWorld::Ptr Potion::copyToCellImpl(const MWWorld::ConstPtr &ptr, MWWorld::CellStore &cell) const

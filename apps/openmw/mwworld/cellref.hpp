@@ -82,6 +82,10 @@ namespace MWWorld
         std::string getSoul() const;
         void setSoul(const std::string& soul);
 
+        // ID of poison which this object has
+        std::string getPoison() const;
+        void setPoison(const std::string& poison);
+
         // The faction that owns this object (and will get angry if
         // you take it and are not a faction member)
         std::string getFaction() const;

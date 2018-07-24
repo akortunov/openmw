@@ -181,6 +181,20 @@ namespace MWWorld
         }
     }
 
+    std::string CellRef::getPoison() const
+    {
+        return mCellRef.mPoison;
+    }
+
+    void CellRef::setPoison(const std::string &poison)
+    {
+        if (poison != mCellRef.mPoison)
+        {
+            mChanged = true;
+            mCellRef.mPoison = poison;
+        }
+    }
+
     std::string CellRef::getFaction() const
     {
         return mCellRef.mFaction;

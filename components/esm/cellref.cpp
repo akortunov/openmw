@@ -79,6 +79,9 @@ void ESM::CellRef::loadData(ESMReader &esm, bool &isDeleted)
             case ESM::FourCC<'X','S','O','L'>::value:
                 mSoul = esm.getHString();
                 break;
+            case ESM::FourCC<'P','O','I','S'>::value:
+                mPoison = esm.getHString();
+                break;
             case ESM::FourCC<'C','N','A','M'>::value:
                 mFaction = esm.getHString();
                 break;
@@ -149,6 +152,7 @@ void ESM::CellRef::save (ESMWriter &esm, bool wideRefNum, bool inInventory, bool
     esm.writeHNOCString("ANAM", mOwner);
     esm.writeHNOCString("BNAM", mGlobalVariable);
     esm.writeHNOCString("XSOL", mSoul);
+    esm.writeHNOCString("POIS", mPoison);
 
     esm.writeHNOCString("CNAM", mFaction);
     if (mFactionRank != -2) {
@@ -196,6 +200,7 @@ void ESM::CellRef::blank()
     mOwner.clear();
     mGlobalVariable.clear();
     mSoul.clear();
+    mPoison.clear();
     mFaction.clear();
     mFactionRank = -2;
     mChargeInt = -1;

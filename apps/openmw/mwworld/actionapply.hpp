@@ -19,6 +19,17 @@ namespace MWWorld
             ActionApply (const Ptr& object, const std::string& id);
     };
 
+    class ActionPoison : public Action
+    {
+            std::string mId;
+
+            virtual void executeImp (const Ptr& actor);
+
+        public:
+
+            ActionPoison (const Ptr& object, const std::string& id);
+    };
+
     class ActionApplyWithSkill : public Action
     {
             std::string mId;

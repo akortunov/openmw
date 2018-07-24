@@ -9,6 +9,8 @@ namespace MWClass
     {
             virtual MWWorld::Ptr copyToCellImpl(const MWWorld::ConstPtr &ptr, MWWorld::CellStore &cell) const;
 
+            bool isPoison(const MWWorld::Ptr& ptr) const;
+
         public:
 
             virtual void insertObjectRendering (const MWWorld::Ptr& ptr, const std::string& model, MWRender::RenderingInterface& renderingInterface) const;

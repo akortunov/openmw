@@ -55,6 +55,9 @@ namespace ESM
             // ID of creature trapped in this soul gem
             std::string mSoul;
 
+            // ID of poison which this object has
+            std::string mPoison;
+
             // The faction that owns this object (and will get angry if
             // you take it and are not a faction member)
             std::string mFaction;
