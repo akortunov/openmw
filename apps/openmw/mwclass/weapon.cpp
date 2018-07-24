@@ -346,6 +346,16 @@ namespace MWClass
             text += MWGui::ToolTips::getMiscString(ref->mBase->mScript, "Script");
         }
 
+        std::string poison = ptr.getCellRef().getPoison();
+        if (!poison.empty())
+        {
+            const MWWorld::ESMStore& store = MWBase::Environment::get().getWorld()->getStore();
+            const ESM::Potion* poisonRef = store.get<ESM::Potion>().search(poison);
+            info.effects = MWGui::Widgets::MWEffectList::effectListFromESM(&poisonRef->mEffects);
+            info.isPotion = true;
+            info.isPoison = true;
+        }
+
         info.text = text;
 
         return info;

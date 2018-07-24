@@ -25,7 +25,7 @@
 
 namespace MWClass
 {
-    bool Potion::isPoison(const MWWorld::Ptr& ptr) const
+    bool Potion::isPoison(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
 
@@ -137,13 +137,11 @@ namespace MWClass
         MWGui::ToolTipInfo info;
         info.caption = ref->mBase->mName + MWGui::ToolTips::getCountString(count);
         info.icon = ref->mBase->mIcon;
+        info.effects = MWGui::Widgets::MWEffectList::effectListFromESM(&ref->mBase->mEffects);
 
         std::string text;
-
         text += "\n#{sWeight}: " + MWGui::ToolTips::toString(ref->mBase->mData.mWeight);
         text += MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{sValue}");
-
-        info.effects = MWGui::Widgets::MWEffectList::effectListFromESM(&ref->mBase->mEffects);
 
         // hide effects the player doesn't know about
         MWWorld::Ptr player = MWBase::Environment::get().getWorld ()->getPlayerPtr();
@@ -151,6 +149,7 @@ namespace MWClass
             info.effects[i].mKnown = MWMechanics::Alchemy::knownEffect(i, player);
 
         info.isPotion = true;
+        info.isPoison = isPoison(ptr);
 
         if (MWBase::Environment::get().getWindowManager()->getFullHelp()) {
             text += MWGui::ToolTips::getCellRefString(ptr.getCellRef());

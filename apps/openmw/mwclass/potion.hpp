@@ -9,7 +9,7 @@ namespace MWClass
     {
             virtual MWWorld::Ptr copyToCellImpl(const MWWorld::ConstPtr &ptr, MWWorld::CellStore &cell) const;
 
-            bool isPoison(const MWWorld::Ptr& ptr) const;
+            bool isPoison(const MWWorld::ConstPtr& ptr) const;
 
         public:
 
