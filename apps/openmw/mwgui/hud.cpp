@@ -426,10 +426,9 @@ namespace MWGui
 
     void HUD::setSelectedPoison(const std::string& poisonId)
     {
+        mPoisonImage->setImageTexture("");
         if (poisonId.empty())
         {
-            mPoisonImage->clearUserStrings();
-            mPoisonImage->setImageTexture("");
             mPoisonImage->setVisible(false);
             return;
         }
@@ -527,7 +526,6 @@ namespace MWGui
         std::string icon = (player.getClass().getNpcStats(player).isWerewolf()) ? "icons\\k\\tx_werewolf_hand.dds" : "icons\\k\\stealth_handtohand.dds";
         mWeapImage->setIcon(icon);
 
-        mPoisonImage->clearUserStrings();
         mWeapBox->clearUserStrings();
         mWeapBox->setUserString("ToolTipType", "Layout");
         mWeapBox->setUserString("ToolTipLayout", "HandToHandToolTip");
