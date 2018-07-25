@@ -63,7 +63,7 @@ add_openmw_dir (mwworld
     refdata worldimp scene globals class action nullaction actionteleport
     containerstore actiontalk actiontake manualref player cellvisitors failedaction
     cells localscripts customdata inventorystore ptr actionopen actionread
-    actionequip timestamp actionalchemy cellstore actionapply actioneat
+    actionequip timestamp actionalchemy cellstore actionapply actionpoison actioneat
     store esmstore recordcmp fallback actionrepair actionsoulgem livecellref actiondoor
     contentloader esmloader actiontrap cellreflist cellref physicssystem weather projectilemanager
     cellpreloader
