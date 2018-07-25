@@ -38,6 +38,7 @@ namespace MWGui
         void setMinimapVisible(bool visible);
 
         void setSelectedSpell(const std::string& spellId, int successChancePercent);
+        void setSelectedPoison(const std::string& poisonId);
         void setSelectedEnchantItem(const MWWorld::Ptr& item, int chargePercent);
         const MWWorld::Ptr& getSelectedEnchantItem();
         void setSelectedWeapon(const MWWorld::Ptr& item, int durabilityPercent);
@@ -65,6 +66,7 @@ namespace MWGui
         MyGUI::Widget* mHealthFrame;
         MyGUI::Widget *mWeapBox, *mSpellBox, *mSneakBox;
         ItemWidget *mWeapImage, *mSpellImage;
+        MyGUI::ImageBox* mPoisonImage;
         MyGUI::ProgressBar *mWeapStatus, *mSpellStatus;
         MyGUI::Widget *mEffectBox, *mMinimapBox;
         MyGUI::Button* mMinimapButton;
