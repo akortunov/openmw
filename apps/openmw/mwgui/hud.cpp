@@ -76,6 +76,7 @@ namespace MWGui
         , mDrowning(NULL)
         , mWeapImage(NULL)
         , mSpellImage(NULL)
+        , mPoisonImage(NULL)
         , mWeapStatus(NULL)
         , mSpellStatus(NULL)
         , mEffectBox(NULL)
@@ -136,6 +137,8 @@ namespace MWGui
 
         getWidget(mSpellBox, "SpellBox");
         getWidget(mSpellImage, "SpellImage");
+        getWidget(mPoisonImage, "PoisonImage");
+
         getWidget(mSpellStatus, "SpellStatus");
         mSpellBoxBaseLeft = mSpellBox->getLeft();
         mSpellBox->eventMouseButtonClick += MyGUI::newDelegate(this, &HUD::onMagicClicked);
@@ -421,6 +424,26 @@ namespace MWGui
         mSpellImage->setIcon(icon);
     }
 
+    void HUD::setSelectedPoison(const std::string& poisonId)
+    {
+        if (poisonId.empty())
+        {
+            mPoisonImage->clearUserStrings();
+            mPoisonImage->setImageTexture("");
+            mPoisonImage->setVisible(false);
+            return;
+        }
+
+        mPoisonImage->setVisible(true);
+
+        const ESM::Potion* poison = MWBase::Environment::get().getWorld()->getStore().get<ESM::Potion>().find(poisonId);
+        // use the icon of the first effect
+        const ESM::MagicEffect* effect =
+            MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find(poison->mEffects.mList.front().mEffectID);
+
+        mPoisonImage->setImageTexture(MWBase::Environment::get().getWindowManager()->correctIconPath(effect->mIcon));
+    }
+
     void HUD::setSelectedEnchantItem(const MWWorld::Ptr& item, int chargePercent)
     {
         std::string itemName = item.getClass().getName(item);
@@ -460,6 +483,9 @@ namespace MWGui
         mWeapStatus->setProgressPosition(durabilityPercent);
 
         mWeapImage->setItem(item);
+
+        std::string poisonName = item.getClass().getPoison(item);
+        setSelectedPoison(poisonName);
     }
 
     void HUD::unsetSelectedSpell()
@@ -496,10 +522,12 @@ namespace MWGui
         MWBase::World *world = MWBase::Environment::get().getWorld();
         MWWorld::Ptr player = world->getPlayerPtr();
 
+        setSelectedPoison("");
         mWeapImage->setItem(MWWorld::Ptr());
         std::string icon = (player.getClass().getNpcStats(player).isWerewolf()) ? "icons\\k\\tx_werewolf_hand.dds" : "icons\\k\\stealth_handtohand.dds";
         mWeapImage->setIcon(icon);
 
+        mPoisonImage->clearUserStrings();
         mWeapBox->clearUserStrings();
         mWeapBox->setUserString("ToolTipType", "Layout");
         mWeapBox->setUserString("ToolTipLayout", "HandToHandToolTip");
