@@ -52,24 +52,32 @@ namespace MWMechanics
         return false;
     }
 
-    bool applyPoison(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, MWWorld::Ptr& weapon, const osg::Vec3f& hitPosition, const bool fromProjectile)
+    bool applyPoison(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, const osg::Vec3f& hitPosition, const std::string poisonId, const bool fromProjectile)
     {
-        MWWorld::InventoryStore& inv = attacker.getClass().getInventoryStore(attacker);
-        MWWorld::ConstContainerStoreIterator poisonIt = inv.getSlot(MWWorld::InventoryStore::Slot_Poison);
-
-        if (poisonIt != inv.end())
+        std::string poisonName="";
+        if (fromProjectile)
         {
-            const std::string poisonName = poisonIt->getCellRef().getRefId();
+            poisonName = poisonId;
+        }
+        else
+        {
+            MWWorld::InventoryStore& inv = attacker.getClass().getInventoryStore(attacker);
+            MWWorld::ConstContainerStoreIterator poisonIt = inv.getSlot(MWWorld::InventoryStore::Slot_Poison);
+
+            if (poisonIt != inv.end())
+            {
+                poisonName = poisonIt->getCellRef().getRefId();
+                inv.remove(poisonName, 1, attacker);
+            }
+        }
+
+        if (!poisonName.empty())
+        {
             const ESM::Potion* poison = MWBase::Environment::get().getWorld()->getStore().get<ESM::Potion>().find(poisonName);
 
             MWMechanics::CastSpell cast(attacker, victim);
             cast.mHitPosition = hitPosition;
             cast.cast(poison, true);
-
-            if (!fromProjectile)
-            {
-                inv.remove(poisonName, 1, attacker);
-            }
 
             return true;
         }
@@ -197,7 +205,7 @@ namespace MWMechanics
     }
 
     void projectileHit(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, MWWorld::Ptr weapon, const MWWorld::Ptr& projectile,
-                       const osg::Vec3f& hitPosition, float attackStrength)
+                       const osg::Vec3f& hitPosition, float attackStrength, const std::string poisonId)
     {
         MWBase::World *world = MWBase::Environment::get().getWorld();
         const MWWorld::Store<ESM::GameSetting> &gmst = world->getStore().get<ESM::GameSetting>();
@@ -246,6 +254,8 @@ namespace MWMechanics
         bool appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, weapon, hitPosition, true);
         if (weapon != projectile)
             appliedEnchantment = applyOnStrikeEnchantment(attacker, victim, projectile, hitPosition, true);
+
+        applyPoison(attacker, victim, hitPosition, poisonId, true);
 
         if (validVictim)
         {

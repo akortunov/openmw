@@ -92,18 +92,18 @@ namespace
                 sounds.push_back(schools[magicEffect->mData.mSchool] + " bolt");
             projectileEffects.mList.push_back(*iter);
         }
-        
+
         if (count != 0)
             speed /= count;
 
         // the particle texture is only used if there is only one projectile
-        if (projectileEffects.mList.size() == 1) 
+        if (projectileEffects.mList.size() == 1)
         {
             const ESM::MagicEffect *magicEffect = MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find (
                 effects->mList.begin()->mEffectID);
             texture = magicEffect->mParticle;
         }
-        
+
         if (projectileEffects.mList.size() > 1) // insert a VFX_Multiple projectile if there are multiple projectile effects
         {
             std::ostringstream ID;
@@ -207,7 +207,7 @@ namespace MWWorld
         projectile->accept(*boundVisitor.get());
         osg::BoundingBox bb = boundVisitor->getBoundingBox();
 
-        state.mNode->setPivotPoint(bb.center()); 
+        state.mNode->setPivotPoint(bb.center());
 
         if (state.mIdMagic.size() > 1)
             for (size_t iter = 1; iter != state.mIdMagic.size(); ++iter)
@@ -231,15 +231,15 @@ namespace MWWorld
             projectileLight->setLinearAttenuation(0.1f);
             projectileLight->setQuadraticAttenuation(0.f);
             projectileLight->setPosition(osg::Vec4(pos, 1.0));
-            
+
             SceneUtil::LightSource* projectileLightSource = new SceneUtil::LightSource;
             projectileLightSource->setNodeMask(MWRender::Mask_Lighting);
             projectileLightSource->setRadius(66.f);
-            
+
             state.mNode->addChild(projectileLightSource);
             projectileLightSource->setLight(projectileLight);
         }
-        
+
         SceneUtil::DisableFreezeOnCullVisitor disableFreezeOnCullVisitor;
         state.mNode->accept(disableFreezeOnCullVisitor);
 
@@ -310,7 +310,7 @@ namespace MWWorld
             if (sound)
                 state.mSounds.push_back(sound);
         }
-            
+
         mMagicBolts.push_back(state);
     }
 
@@ -327,6 +327,16 @@ namespace MWWorld
 
         MWWorld::ManualRef ref(MWBase::Environment::get().getWorld()->getStore(), projectile.getCellRef().getRefId());
         MWWorld::Ptr ptr = ref.getPtr();
+
+        MWWorld::InventoryStore& inv = actor.getClass().getInventoryStore(actor);
+        MWWorld::ConstContainerStoreIterator poisonIt = inv.getSlot(MWWorld::InventoryStore::Slot_Poison);
+        std::string poisonName = "";
+        if (poisonIt != inv.end())
+        {
+            poisonName = poisonIt->getCellRef().getRefId();
+            inv.remove(poisonName, 1, actor);
+        }
+        state.mPoisonId = poisonName;
 
         createModel(state, ptr.getClass().getModel(ptr), pos, orient, false, false, osg::Vec4(0,0,0,0));
 
@@ -466,7 +476,7 @@ namespace MWWorld
 
             osg::Quat orient;
 
-            if (it->mThrown)            
+            if (it->mThrown)
                 orient.set(
                     osg::Matrixd::rotate(it->mEffectAnimationTime->getTime() * -10.0,osg::Vec3f(0,0,1)) *
                     osg::Matrixd::rotate(osg::PI / 2.0,osg::Vec3f(0,1,0)) *
@@ -504,7 +514,9 @@ namespace MWWorld
                 MWWorld::ManualRef projectileRef(MWBase::Environment::get().getWorld()->getStore(), it->mIdArrow);
 
                 // Try to get a Ptr to the bow that was used. It might no longer exist.
-                MWWorld::Ptr bow = projectileRef.getPtr();
+                MWWorld::Ptr ammo = projectileRef.getPtr();
+                MWWorld::Ptr bow = ammo;
+
                 if (!caster.isEmpty() && it->mIdArrow != it->mBowId)
                 {
                     MWWorld::InventoryStore& inv = caster.getClass().getInventoryStore(caster);
@@ -516,7 +528,7 @@ namespace MWWorld
                 if (caster.isEmpty())
                     caster = result.mHitObject;
 
-                MWMechanics::projectileHit(caster, result.mHitObject, bow, projectileRef.getPtr(), result.mHit ? result.mHitPos : newPos, it->mAttackStrength);
+                MWMechanics::projectileHit(caster, result.mHitObject, bow, ammo, result.mHit ? result.mHitPos : newPos, it->mAttackStrength, it->mPoisonId);
 
                 if (underwater)
                     mRendering->emitWaterRipple(newPos);
@@ -569,7 +581,7 @@ namespace MWWorld
             state.mPosition = ESM::Vector3(osg::Vec3f(it->mNode->getPosition()));
             state.mOrientation = ESM::Quaternion(osg::Quat(it->mNode->getAttitude()));
             state.mActorId = it->mActorId;
-
+            state.mPoisonId = it->mPoisonId;
             state.mBowId = it->mBowId;
             state.mVelocity = it->mVelocity;
             state.mAttackStrength = it->mAttackStrength;
@@ -610,6 +622,7 @@ namespace MWWorld
             state.mBowId = esm.mBowId;
             state.mVelocity = esm.mVelocity;
             state.mIdArrow = esm.mId;
+            state.mPoisonId = esm.mPoisonId;
             state.mAttackStrength = esm.mAttackStrength;
 
             std::string model;
