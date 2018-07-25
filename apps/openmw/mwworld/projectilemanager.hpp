@@ -110,6 +110,9 @@ namespace MWWorld
             // RefID of the bow or crossbow the actor was using when this projectile was fired (may be empty)
             std::string mBowId;
 
+            // RefId of poison, applied to projectile
+            std::string mPoisonId;
+
             osg::Vec3f mVelocity;
             float mAttackStrength;
             bool mThrown;

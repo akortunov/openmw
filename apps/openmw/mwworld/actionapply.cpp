@@ -62,7 +62,10 @@ namespace MWWorld
             // apply poison to weapon
             if (weapon != targetClass.getInventoryStore(actor).end())
             {
+                //weapon->getContainerStore()->unstack(*weapon, actor);
                 weapon->getCellRef().setPoison(mId);
+                //weapon->getContainerStore()->restack(*weapon);
+
                 actor.getClass().getContainerStore(actor).remove(getTarget(), 1, actor);
             }
         }

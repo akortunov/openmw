@@ -40,6 +40,7 @@ namespace ESM
     struct ProjectileState : public BaseProjectileState
     {
         std::string mBowId;
+        std::string mPoisonId;
         Vector3 mVelocity;
         float mAttackStrength;
 

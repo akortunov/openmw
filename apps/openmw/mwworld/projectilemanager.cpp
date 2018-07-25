@@ -321,6 +321,7 @@ namespace MWWorld
         state.mBowId = bow.getCellRef().getRefId();
         state.mVelocity = orient * osg::Vec3f(0,1,0) * speed;
         state.mIdArrow = projectile.getCellRef().getRefId();
+        state.mPoisonId = projectile.getClass().getPoison(projectile);
         state.mCasterHandle = actor;
         state.mAttackStrength = attackStrength;
         state.mThrown = projectile.get<ESM::Weapon>()->mBase->mData.mType == ESM::Weapon::MarksmanThrown;
@@ -506,6 +507,13 @@ namespace MWWorld
                 // Try to get a Ptr to the bow that was used. It might no longer exist.
                 MWWorld::Ptr ammo = projectileRef.getPtr();
                 MWWorld::Ptr bow = ammo;
+
+                // Keep poisons for throwing weapon
+                if (it->mIdArrow == it->mBowId)
+                {
+                    ammo.getCellRef().setPoison(it->mPoisonId);
+                }
+
                 if (!caster.isEmpty() && it->mIdArrow != it->mBowId)
                 {
                     MWWorld::InventoryStore& inv = caster.getClass().getInventoryStore(caster);
@@ -570,7 +578,7 @@ namespace MWWorld
             state.mPosition = ESM::Vector3(osg::Vec3f(it->mNode->getPosition()));
             state.mOrientation = ESM::Quaternion(osg::Quat(it->mNode->getAttitude()));
             state.mActorId = it->mActorId;
-
+            state.mPoisonId = it->mPoisonId;
             state.mBowId = it->mBowId;
             state.mVelocity = it->mVelocity;
             state.mAttackStrength = it->mAttackStrength;
@@ -611,6 +619,7 @@ namespace MWWorld
             state.mBowId = esm.mBowId;
             state.mVelocity = esm.mVelocity;
             state.mIdArrow = esm.mId;
+            state.mPoisonId = esm.mPoisonId;
             state.mAttackStrength = esm.mAttackStrength;
 
             std::string model;

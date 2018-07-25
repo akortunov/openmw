@@ -180,6 +180,8 @@ namespace MWClass
             std::shared_ptr<MWWorld::Action> action (
                 new MWWorld::ActionPoison (ptr, ref->mBase->mId));
 
+            action->setSound ("Item Potion Down");
+
             return action;
         }
         else
