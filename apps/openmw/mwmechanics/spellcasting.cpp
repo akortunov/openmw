@@ -848,9 +848,10 @@ namespace MWMechanics
 
     bool CastSpell::cast(const ESM::Potion* potion, bool poison)
     {
+        // Do not stack poisons
         mSourceName = potion->mName;
         mId = potion->mId;
-        mStack = true;
+        mStack = !poison;
 
         if (poison)
             inflict(mTarget, mCaster, potion->mEffects, ESM::RT_Self);
