@@ -27,16 +27,26 @@ namespace MWWorld
         const MWWorld::Class& targetClass = actor.getClass();
         if (targetClass.hasInventoryStore(actor))
         {
-            MWWorld::ContainerStoreIterator weapon = targetClass.getInventoryStore(actor).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            InventoryStore& invStore = targetClass.getInventoryStore(actor);
+            MWWorld::ContainerStoreIterator weapon = invStore.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
 
             // apply poison to weapon
-            if (weapon != targetClass.getInventoryStore(actor).end())
+            if (weapon != invStore.end())
             {
-                //weapon->getContainerStore()->unstack(*weapon, actor);
-                weapon->getCellRef().setPoison(mId);
-                //weapon->getContainerStore()->restack(*weapon);
+                MWWorld::Ptr weaponPtr = *weapon;
+                if (weaponPtr.getRefData().getCount() > 1)
+                {
+                    MWWorld::ContainerStoreIterator newStack = invStore.unstack(weaponPtr, actor);
+                    weaponPtr.getCellRef().setPoison(mId);
+                    invStore.equip(MWWorld::InventoryStore::Slot_CarriedRight, newStack, actor);
+                }
+                else
+                {
+                    weaponPtr.getCellRef().setPoison(mId);
+                    //invStore.restack(weaponPtr);
+                }
 
-                actor.getClass().getContainerStore(actor).remove(getTarget(), 1, actor);
+                invStore.remove(getTarget(), 1, actor);
             }
         }
     }
