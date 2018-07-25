@@ -8,6 +8,7 @@ namespace MWClass
     class Potion : public MWWorld::Class
     {
             virtual MWWorld::Ptr copyToCellImpl(const MWWorld::ConstPtr &ptr, MWWorld::CellStore &cell) const;
+            bool isPoison(const MWWorld::ConstPtr& ptr) const;
 
         public:
 
@@ -35,6 +36,10 @@ namespace MWClass
 
             virtual int getValue (const MWWorld::ConstPtr& ptr) const;
             ///< Return trade value of the object. Throws an exception, if the object can't be traded.
+
+            virtual std::pair<std::vector<int>, bool> getEquipmentSlots (const MWWorld::ConstPtr& ptr) const;
+            ///< \return first: Return IDs of the slot this object can be equipped in; second: can object
+            /// stay stacked when equipped?
 
             virtual std::shared_ptr<MWWorld::Action> use (const MWWorld::Ptr& ptr, bool force=false) const;
             ///< Generate action for using via inventory menu

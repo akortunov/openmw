@@ -60,8 +60,9 @@ namespace MWWorld
             static const int Slot_CarriedRight = 16;
             static const int Slot_CarriedLeft = 17;
             static const int Slot_Ammunition = 18;
+            static const int Slot_Poison = 19;
 
-            static const int Slots = 19;
+            static const int Slots = 20;
 
             static const int Slot_NoSlot = -1;
 

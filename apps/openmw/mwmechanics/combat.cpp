@@ -52,6 +52,30 @@ namespace MWMechanics
         return false;
     }
 
+    bool applyPoison(const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, MWWorld::Ptr& weapon, const osg::Vec3f& hitPosition, const bool fromProjectile)
+    {
+        MWWorld::InventoryStore& inv = attacker.getClass().getInventoryStore(attacker);
+        MWWorld::ConstContainerStoreIterator poisonIt = inv.getSlot(MWWorld::InventoryStore::Slot_Poison);
+
+        if (poisonIt != inv.end())
+        {
+            const std::string poisonName = poisonIt->getCellRef().getRefId();
+            const ESM::Potion* poison = MWBase::Environment::get().getWorld()->getStore().get<ESM::Potion>().find(poisonName);
+
+            MWMechanics::CastSpell cast(attacker, victim);
+            cast.mHitPosition = hitPosition;
+            cast.cast(poison, true);
+
+            if (!fromProjectile)
+            {
+                inv.remove(poisonName, 1, attacker);
+            }
+
+            return true;
+        }
+        return false;
+    }
+
     bool blockMeleeAttack(const MWWorld::Ptr &attacker, const MWWorld::Ptr &blocker, const MWWorld::Ptr &weapon, float damage, float attackStrength)
     {
         if (!blocker.getClass().hasInventoryStore(blocker))

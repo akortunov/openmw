@@ -7,11 +7,12 @@
 #include "../mwbase/windowmanager.hpp"
 
 #include "../mwworld/ptr.hpp"
-#include "../mwworld/actiontake.hpp"
 #include "../mwworld/actionapply.hpp"
+#include "../mwworld/actionequip.hpp"
+#include "../mwworld/actiontake.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
-#include "../mwworld/containerstore.hpp"
+#include "../mwworld/inventorystore.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwworld/nullaction.hpp"
 
@@ -24,6 +25,28 @@
 
 namespace MWClass
 {
+    bool Potion::isPoison(const MWWorld::ConstPtr& ptr) const
+    {
+        const MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
+
+        for (std::vector<ESM::ENAMstruct>::const_iterator effectIt (ref->mBase->mEffects.mList.begin());
+             effectIt != ref->mBase->mEffects.mList.end(); ++effectIt)
+        {
+            const ESM::MagicEffect *magicEffect =
+                MWBase::Environment::get().getWorld()->getStore().get<ESM::MagicEffect>().find (
+                effectIt->mEffectID);
+
+            // Re-casting a bound equipment effect has no effect if the spell is still active
+            if (magicEffect->mData.mFlags & ESM::MagicEffect::Harmful)
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
 
     void Potion::insertObjectRendering (const MWWorld::Ptr& ptr, const std::string& model, MWRender::RenderingInterface& renderingInterface) const
     {
@@ -139,17 +162,42 @@ namespace MWClass
         return info;
     }
 
+    std::pair<std::vector<int>, bool> Potion::getEquipmentSlots (const MWWorld::ConstPtr& ptr) const
+    {
+        std::vector<int> slots_;
+        bool stack = false;
+
+        if (isPoison(ptr))
+        {
+            slots_.push_back (int (MWWorld::InventoryStore::Slot_Poison));
+            stack = true;
+        }
+
+        return std::make_pair (slots_, stack);
+    }
+
     std::shared_ptr<MWWorld::Action> Potion::use (const MWWorld::Ptr& ptr, bool force) const
     {
-        MWWorld::LiveCellRef<ESM::Potion> *ref =
-            ptr.get<ESM::Potion>();
+        if (isPoison(ptr))
+        {
+            std::shared_ptr<MWWorld::Action> action (
+                new MWWorld::ActionEquip (ptr));
 
-        std::shared_ptr<MWWorld::Action> action (
-            new MWWorld::ActionApply (ptr, ref->mBase->mId));
+            action->setSound ("Item Potion Down");
 
-        action->setSound ("Drink");
+            return action;
+        }
+        else
+        {
+            MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
 
-        return action;
+            std::shared_ptr<MWWorld::Action> action (
+                new MWWorld::ActionApply (ptr, ref->mBase->mId));
+
+            action->setSound ("Drink");
+
+            return action;
+        }
     }
 
     MWWorld::Ptr Potion::copyToCellImpl(const MWWorld::ConstPtr &ptr, MWWorld::CellStore &cell) const
