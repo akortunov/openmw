@@ -1,6 +1,7 @@
 #include "potion.hpp"
 
 #include <components/esm/loadalch.hpp>
+#include <components/settings/settings.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
@@ -27,6 +28,10 @@ namespace MWClass
 {
     bool Potion::isPoison(const MWWorld::ConstPtr& ptr) const
     {
+        static const bool poisonsEnabled = Settings::Manager::getBool("poisons", "Game");
+        if (!poisonsEnabled)
+            return false;
+
         const MWWorld::LiveCellRef<ESM::Potion> *ref = ptr.get<ESM::Potion>();
 
         for (std::vector<ESM::ENAMstruct>::const_iterator effectIt (ref->mBase->mEffects.mList.begin());

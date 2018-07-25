@@ -171,3 +171,16 @@ For example, if the main animation mesh has name Meshes/x.nif, an engine will lo
 Can be useful if you want to use several animation replacers without merging them.
 Attention: animations from AnimKit have own format and are not supposed to be directly loaded in-game!
 This setting can only be configured by editing the settings configuration file.
+
+poisons
+-------
+
+:Type:		boolean
+:Range:		True/False
+:Default:	False
+
+When enabled, OpenMW treats potions with only negative effects as poisons.
+You can equip poison to separate slot and it will work similar to OnStrike enchantment.
+Also in this mode alchemy tools will not decrease power of negative effects, if positive effects are not present.
+
+This setting can only be configured by editing the settings configuration file.
