@@ -781,7 +781,7 @@ void MWWorld::ContainerStore::writeState (ESM::InventoryState& state) const
     state.mItems.clear();
 
     int index = 0;
-    storeStates (potions, state, index);
+    storeStates (potions, state, index, true);
     storeStates (appas, state, index);
     storeStates (armors, state, index, true);
     storeStates (books, state, index, true); // not equipable as such, but for selectedEnchantItem
@@ -813,7 +813,7 @@ void MWWorld::ContainerStore::readState (const ESM::InventoryState& inventory)
 
         switch (type)
         {
-            case ESM::REC_ALCH: getState (potions, state); break;
+            case ESM::REC_ALCH: readEquipmentState(getState (potions, state), thisIndex, inventory); break;
             case ESM::REC_APPA: getState (appas, state); break;
             case ESM::REC_ARMO: readEquipmentState (getState (armors, state), thisIndex, inventory); break;
             case ESM::REC_BOOK: readEquipmentState (getState (books, state), thisIndex, inventory); break; // not equipable as such, but for selectedEnchantItem
