@@ -1112,16 +1112,45 @@ void CharacterController::handleTextKey(const std::string &groupname, const std:
         mCastingManualSpell = false;
     }
 
-    else if (groupname == "shield" && evt.compare(off, len, "block hit") == 0)
-        mPtr.getClass().block(mPtr);
-    else if (groupname == "weapon" && evt.compare(off, len, "block hit") == 0)
-        mPtr.getClass().block(mPtr);
-    else if (groupname == "block one handed" && evt.compare(off, len, "block hit") == 0)
-        mPtr.getClass().block(mPtr);
-    else if (groupname == "block two close" && evt.compare(off, len, "block hit") == 0)
-        mPtr.getClass().block(mPtr);
-    else if (groupname == "block two wide" && evt.compare(off, len, "block hit") == 0)
-        mPtr.getClass().block(mPtr);
+    else if (evt.compare(off, len, "block hit") == 0)
+    {
+        if (groupname == "shield")
+        {
+            mPtr.getClass().block(mPtr);
+        }
+        else if (groupname == "weapon")
+        {
+            int index=Misc::Rng::rollDice(3) + 1; // [1, 4]
+
+            const MWWorld::Ptr weapon = getBlockingItem(mPtr);
+            if (!weapon.isEmpty() && weapon.getTypeName() == typeid(ESM::Weapon).name())
+            {
+                MWBase::SoundManager *sndMgr = MWBase::Environment::get().getSoundManager();
+                const MWWorld::LiveCellRef<ESM::Weapon> *ref = weapon.get<ESM::Weapon>();
+                ESM::Weapon::Type weaponType = (ESM::Weapon::Type)ref->mBase->mData.mType;
+                switch(weaponType)
+                {
+                    case ESM::Weapon::ShortBladeOneHand:
+                    case ESM::Weapon::LongBladeOneHand:
+                    case ESM::Weapon::BluntOneHand:
+                    case ESM::Weapon::AxeOneHand:
+                        sndMgr->playSound3D(mPtr, "Parry Blade 1H "+std::to_string(index), 1.0f, 1.0f);
+                        break;
+                    case ESM::Weapon::LongBladeTwoHand:
+                    case ESM::Weapon::BluntTwoClose:
+                    case ESM::Weapon::AxeTwoHand:
+                        sndMgr->playSound3D(mPtr, "Parry Blade 2H "+std::to_string(index), 1.0f, 1.0f);
+                        break;
+                    case ESM::Weapon::BluntTwoWide:
+                    case ESM::Weapon::SpearTwoWide:
+                        sndMgr->playSound3D(mPtr, "Parry Wide 2H "+std::to_string(index), 1.0f, 1.0f);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
 }
 
 void CharacterController::updatePtr(const MWWorld::Ptr &ptr)
