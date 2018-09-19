@@ -190,6 +190,8 @@ class CharacterController : public MWRender::Animation::TextKeyListener
 
     bool mAttackingOrSpell;
     bool mCastingManualSpell;
+    bool mSpellcasting;
+    bool mSwiftCasting;
 
     float mTimeUntilWake;
 
@@ -236,7 +238,7 @@ class CharacterController : public MWRender::Animation::TextKeyListener
     std::string getWeaponAnimation(int weaponType) const;
 
 public:
-    CharacterController(const MWWorld::Ptr &ptr, MWRender::Animation *anim);
+    CharacterController(const MWWorld::Ptr &ptr, MWRender::Animation *anim, bool swiftCasting);
     virtual ~CharacterController();
 
     void handleTextKey(const std::string &groupname, SceneUtil::TextKeyMap::ConstIterator key, const SceneUtil::TextKeyMap& map) override;
@@ -287,6 +289,7 @@ public:
     void setVisibility(float visibility);
     void setAttackingOrSpell(bool attackingOrSpell);
     void castSpell(const std::string& spellId, bool manualSpell=false);
+    void setSpellcasting(bool spellcasting);
     void setAIAttackType(const std::string& attackType);
     static void setAttackTypeRandomly(std::string& attackType);
 

@@ -37,6 +37,7 @@ namespace MWInput
         , mScreenCaptureHandler(screenCaptureHandler)
         , mScreenCaptureOperation(screenCaptureOperation)
         , mAlwaysRunActive(Settings::Manager::getBool("always run", "Input"))
+        , mSwiftCasting(Settings::Manager::getBool("swift casting", "Game"))
         , mSneaking(false)
         , mAttemptJump(false)
         , mOverencumberedMessageDelay(0.f)
@@ -397,6 +398,12 @@ namespace MWInput
 
         if (MWBase::Environment::get().getMechanicsManager()->isAttackingOrSpell(player.getPlayer()))
             return;
+
+        if (mSwiftCasting)
+        {
+            player.setSpellcasting(true);
+            return;
+        }
 
         MWMechanics::DrawState_ state = player.getDrawState();
         if (state == MWMechanics::DrawState_Weapon || state == MWMechanics::DrawState_Nothing)

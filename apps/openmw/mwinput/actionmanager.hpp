@@ -67,6 +67,7 @@ namespace MWInput
         osgViewer::ScreenCaptureHandler::CaptureOperation* mScreenCaptureOperation;
 
         bool mAlwaysRunActive;
+        bool mSwiftCasting;
         bool mSneaking;
         bool mAttemptJump;
 

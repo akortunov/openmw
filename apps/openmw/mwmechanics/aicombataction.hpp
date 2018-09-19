@@ -34,12 +34,15 @@ namespace MWMechanics
     class ActionSpell : public Action
     {
     public:
-        ActionSpell(const std::string& spellId) : mSpellId(spellId) {}
+        ActionSpell(const std::string& spellId, bool manualSpell = false) : mSpellId(spellId), mManualSpell(manualSpell) {}
         std::string mSpellId;
         /// Sets the given spell as selected on the actor's spell list.
         void prepare(const MWWorld::Ptr& actor) override;
 
         float getCombatRange (bool& isRanged) const override;
+
+    private:
+        bool mManualSpell = false;
     };
 
     class ActionEnchantedItem : public Action

@@ -1,9 +1,11 @@
 #include "aicombat.hpp"
 
+#include <components/esm/aisequence.hpp>
+
 #include <components/misc/rng.hpp>
 #include <components/misc/coordinateconverter.hpp>
 
-#include <components/esm/aisequence.hpp>
+#include <components/settings/settings.hpp>
 
 #include <components/misc/mathutil.hpp>
 
@@ -14,6 +16,7 @@
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/inventorystore.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/dialoguemanager.hpp"
@@ -571,6 +574,23 @@ namespace MWMechanics
             {
                 mAttack = true; // attack starts just now
                 characterController.setAttackingOrSpell(true);
+
+                if (Settings::Manager::getBool("swift casting", "Game"))
+                {
+                    const CreatureStats& stats = actor.getClass().getCreatureStats(actor);
+                    const std::string& selectedSpellId = stats.getSpells().getSelectedSpell();
+                    MWWorld::Ptr selectedEnchItem;
+
+                    if (actor.getClass().hasInventoryStore(actor))
+                    {
+                        MWWorld::InventoryStore& invStore = actor.getClass().getInventoryStore(actor);
+                        if (invStore.getSelectedEnchantItem() != invStore.end())
+                            selectedEnchItem = *invStore.getSelectedEnchantItem();
+                    }
+
+                    if (!selectedSpellId.empty() || !selectedEnchItem.isEmpty())
+                        characterController.setSpellcasting(true);
+                }
 
                 if (!distantCombat)
                     characterController.setAIAttackType(chooseBestAttack(weapon));

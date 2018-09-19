@@ -3,6 +3,8 @@
 #include <components/esm/loadench.hpp>
 #include <components/esm/loadmgef.hpp>
 
+#include <components/settings/settings.hpp>
+
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
@@ -40,11 +42,21 @@ namespace MWMechanics
     void ActionSpell::prepare(const MWWorld::Ptr &actor)
     {
         actor.getClass().getCreatureStats(actor).getSpells().setSelectedSpell(mSpellId);
-        actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Spell);
+        static const bool swiftCasting = Settings::Manager::getBool("swift casting", "Game");
+
         if (actor.getClass().hasInventoryStore(actor))
         {
             MWWorld::InventoryStore& inv = actor.getClass().getInventoryStore(actor);
             inv.setSelectedEnchantItem(inv.end());
+
+            if (!mManualSpell && swiftCasting && inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inv.end())
+                actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Weapon);
+            else
+                actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Spell);
+        }
+        else
+        {
+            actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Spell);
         }
 
         const ESM::Spell* spell = MWBase::Environment::get().getWorld()->getStore().get<ESM::Spell>().find(mSpellId);
@@ -62,9 +74,16 @@ namespace MWMechanics
 
     void ActionEnchantedItem::prepare(const MWWorld::Ptr &actor)
     {
+        static const bool swiftCasting = Settings::Manager::getBool("swift casting", "Game");
+        MWWorld::InventoryStore& inv = actor.getClass().getInventoryStore(actor);
+
         actor.getClass().getCreatureStats(actor).getSpells().setSelectedSpell(std::string());
-        actor.getClass().getInventoryStore(actor).setSelectedEnchantItem(mItem);
-        actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Spell);
+        inv.setSelectedEnchantItem(mItem);
+
+        if (swiftCasting && inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inv.end())
+            actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Weapon);
+        else
+            actor.getClass().getCreatureStats(actor).setDrawState(DrawState_Spell);
     }
 
     float ActionEnchantedItem::getCombatRange(bool& isRanged) const
@@ -85,16 +104,25 @@ namespace MWMechanics
 
     void ActionPotion::prepare(const MWWorld::Ptr &actor)
     {
+        actor.getClass().getCreatureStats(actor).getSpells().setSelectedSpell(std::string());
+        if (actor.getClass().hasInventoryStore(actor))
+        {
+            MWWorld::InventoryStore& inv = actor.getClass().getInventoryStore(actor);
+            inv.setSelectedEnchantItem(inv.end());
+        }
         actor.getClass().apply(actor, mPotion.getCellRef().getRefId(), actor);
         actor.getClass().getContainerStore(actor).remove(mPotion, 1, actor);
     }
 
     void ActionWeapon::prepare(const MWWorld::Ptr &actor)
     {
+        actor.getClass().getCreatureStats(actor).getSpells().setSelectedSpell(std::string());
         if (actor.getClass().hasInventoryStore(actor))
         {
+            MWWorld::InventoryStore& inv = actor.getClass().getInventoryStore(actor);
+            inv.setSelectedEnchantItem(inv.end());
             if (mWeapon.isEmpty())
-                actor.getClass().getInventoryStore(actor).unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight, actor);
+                inv.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight, actor);
             else
             {
                 MWWorld::ActionEquip equip(mWeapon);
@@ -325,7 +353,7 @@ namespace MWMechanics
             static const float fHandToHandReach = gmst.find("fHandToHandReach")->mValue.getFloat();
             dist = fHandToHandReach;
         }
-        else if (stats.getDrawState() == MWMechanics::DrawState_Spell)
+        else if (stats.getDrawState() == MWMechanics::DrawState_Spell || stats.getDrawState() == MWMechanics::DrawState_Weapon)
         {
             dist = 1.0f;
             if (!selectedSpellId.empty())
@@ -340,6 +368,8 @@ namespace MWMechanics
                         dist = effect->mData.mSpeed;
                         break;
                     }
+                    static const float fTargetSpellMaxSpeed = gmst.find("fTargetSpellMaxSpeed")->mValue.getFloat();
+                    dist *= std::max(1000.0f, fTargetSpellMaxSpeed);
                 }
             }
             else if (!selectedEnchItem.isEmpty())
@@ -358,6 +388,8 @@ namespace MWMechanics
                             break;
                         }
                     }
+                    static const float fTargetSpellMaxSpeed = gmst.find("fTargetSpellMaxSpeed")->mValue.getFloat();
+                    dist *= std::max(1000.0f, fTargetSpellMaxSpeed);
                 }
             }
 
@@ -373,13 +405,18 @@ namespace MWMechanics
                 dist = fTargetSpellMaxSpeed;
                 if (!activeAmmo.isEmpty())
                 {
-                    const ESM::Weapon* esmAmmo = activeAmmo.get<ESM::Weapon>()->mBase;
-                    dist *= esmAmmo->mData.mSpeed;
+                    static const float fTargetSpellMaxSpeed = gmst.find("fProjectileMaxSpeed")->mValue.getFloat();
+                    dist = fTargetSpellMaxSpeed;
+                    if (!activeAmmo.isEmpty())
+                    {
+                        const ESM::Weapon* esmAmmo = activeAmmo.get<ESM::Weapon>()->mBase;
+                        dist *= esmAmmo->mData.mSpeed;
+                    }
                 }
-            }
-            else if (esmWeap->mData.mReach > 1)
-            {
-                dist = esmWeap->mData.mReach;
+                else if (esmWeap->mData.mReach > 1)
+                {
+                    dist = esmWeap->mData.mReach;
+                }
             }
         }
 

@@ -1970,7 +1970,10 @@ namespace MWMechanics
                 bool inProcessingRange = distSqr <= mActorsProcessingRange*mActorsProcessingRange;
 
                 if (isPlayer)
-                    ctrl->setAttackingOrSpell(world->getPlayer().getAttackingOrSpell());
+                {
+                    ctrl->setAttackingOrSpell(MWBase::Environment::get().getWorld()->getPlayer().getAttackingOrSpell());
+                    ctrl->setSpellcasting(MWBase::Environment::get().getWorld()->getPlayer().getSpellcasting());
+                }
 
                 // If dead or no longer in combat, no longer store any actors who attempted to hit us. Also remove for the player.
                 if (iter->first != player && (iter->first.getClass().getCreatureStats(iter->first).isDead()

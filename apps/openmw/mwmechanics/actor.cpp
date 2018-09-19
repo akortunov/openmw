@@ -2,11 +2,14 @@
 
 #include "character.hpp"
 
+#include <components/settings/settings.hpp>
+
 namespace MWMechanics
 {
     Actor::Actor(const MWWorld::Ptr &ptr, MWRender::Animation *animation)
     {
-        mCharacterController.reset(new CharacterController(ptr, animation));
+        static const bool swiftCasting = Settings::Manager::getBool("swift casting", "Game");
+        mCharacterController.reset(new CharacterController(ptr, animation, swiftCasting));
     }
 
     void Actor::updatePtr(const MWWorld::Ptr &newPtr)

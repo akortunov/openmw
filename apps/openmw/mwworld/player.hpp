@@ -58,6 +58,7 @@ namespace MWWorld
 
         bool mAttackingOrSpell;
         bool mJumping;
+        bool mSpellcasting;
 
     public:
 
@@ -113,6 +114,8 @@ namespace MWWorld
 
         void setAttackingOrSpell(bool attackingOrSpell);
         bool getAttackingOrSpell() const;
+        void setSpellcasting(bool spellcasting);
+        bool getSpellcasting() const;
 
         void setJumping(bool jumping);
         bool getJumping() const;

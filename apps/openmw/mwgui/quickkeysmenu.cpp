@@ -9,6 +9,8 @@
 #include <components/esm/esmwriter.hpp>
 #include <components/esm/quickkeys.hpp>
 
+#include <components/settings/settings.hpp>
+
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/player.hpp"
@@ -424,7 +426,8 @@ namespace MWGui
                 }
 
                 store.setSelectedEnchantItem(it);
-                MWBase::Environment::get().getWorld()->getPlayer().setDrawState(MWMechanics::DrawState_Spell);
+                if (!Settings::Manager::getBool("swift casting", "Game"))
+                    MWBase::Environment::get().getWorld()->getPlayer().setDrawState(MWMechanics::DrawState_Spell);
             }
         }
         else if (key->type == Type_Magic)
@@ -442,9 +445,9 @@ namespace MWGui
             }
 
             store.setSelectedEnchantItem(store.end());
-            MWBase::Environment::get().getWindowManager()
-                ->setSelectedSpell(spellId, int(MWMechanics::getSpellSuccessChance(spellId, player)));
-            MWBase::Environment::get().getWorld()->getPlayer().setDrawState(MWMechanics::DrawState_Spell);
+            MWBase::Environment::get().getWindowManager()->setSelectedSpell(spellId, int(MWMechanics::getSpellSuccessChance(spellId, player)));
+            if (!Settings::Manager::getBool("swift casting", "Game"))
+                MWBase::Environment::get().getWorld()->getPlayer().setDrawState(MWMechanics::DrawState_Spell);
         }
         else if (key->type == Type_HandToHand)
         {

@@ -39,7 +39,8 @@ namespace MWWorld
         mCurrentCrimeId(-1),
         mPaidCrimeId(-1),
         mAttackingOrSpell(false),
-        mJumping(false)
+        mJumping(false),
+        mSpellcasting(false)
     {
         ESM::CellRef cellRef;
         cellRef.blank();
@@ -275,6 +276,16 @@ namespace MWWorld
         return mJumping;
     }
 
+    void Player::setSpellcasting(bool spellcasting)
+    {
+        mSpellcasting = spellcasting;
+    }
+
+    bool Player::getSpellcasting() const
+    {
+        return mSpellcasting;
+    }
+
     bool Player::isInCombat() {
         return MWBase::Environment::get().getMechanicsManager()->getActorsFighting(getPlayer()).size() != 0;
     }
@@ -307,6 +318,7 @@ namespace MWWorld
         mTeleported = false;
         mAttackingOrSpell = false;
         mJumping = false;
+        mSpellcasting = false;
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mPreviousItems.clear();

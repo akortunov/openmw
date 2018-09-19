@@ -687,6 +687,17 @@ void CharacterController::refreshIdleAnims(const std::string& weapShortGroup, Ch
             mAnimation->getInfo(mCurrentIdle, &startPoint);
         }
 
+        // With swift casting we should not switch character into "idlespell" state when he uses weapons
+        if (idleGroup == "idlespell" && mSwiftCasting)
+        {
+            if (!mPtr.getClass().hasInventoryStore(mPtr))
+                return;
+
+            MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
+            if (inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight) != inv.end())
+                return;
+        }
+
         if(!mCurrentIdle.empty())
             mAnimation->disable(mCurrentIdle);
 
@@ -832,7 +843,7 @@ std::string CharacterController::chooseRandomAttackAnimation() const
     return result;
 }
 
-CharacterController::CharacterController(const MWWorld::Ptr &ptr, MWRender::Animation *anim)
+CharacterController::CharacterController(const MWWorld::Ptr &ptr, MWRender::Animation *anim, bool swiftCasting)
     : mPtr(ptr)
     , mWeapon(MWWorld::Ptr())
     , mAnimation(anim)
@@ -855,6 +866,8 @@ CharacterController::CharacterController(const MWWorld::Ptr &ptr, MWRender::Anim
     , mTurnAnimationThreshold(0)
     , mAttackingOrSpell(false)
     , mCastingManualSpell(false)
+    , mSpellcasting(false)
+    , mSwiftCasting(swiftCasting)
     , mTimeUntilWake(0.f)
     , mIsMovingBackward(false)
 {
@@ -1146,7 +1159,10 @@ bool CharacterController::updateCreatureState()
             mAnimation->disable(mCurrentWeapon);
     }
 
-    if(mAttackingOrSpell)
+    if (mSpellcasting)
+        weapType = ESM::Weapon::Spell;
+
+    if(mAttackingOrSpell || mSpellcasting)
     {
         if(mUpperBodyState == UpperCharState_Nothing && mHitState == CharState_None)
         {
@@ -1154,7 +1170,7 @@ bool CharacterController::updateCreatureState()
 
             std::string startKey = "start";
             std::string stopKey = "stop";
-            if (weapType == ESM::Weapon::Spell)
+            if (weapType == ESM::Weapon::Spell || mSpellcasting)
             {
                 const std::string spellid = stats.getSpells().getSelectedSpell();
                 bool canCast = mCastingManualSpell || MWBase::Environment::get().getWorld()->startSpellCast(mPtr);
@@ -1211,6 +1227,7 @@ bool CharacterController::updateCreatureState()
         }
 
         mAttackingOrSpell = false;
+        mSpellcasting = false;
     }
 
     bool animPlaying = mAnimation->getInfo(mCurrentWeapon);
@@ -1224,7 +1241,7 @@ bool CharacterController::updateCarriedLeftVisible(const int weaptype) const
     // Shields/torches shouldn't be visible during any operation involving two hands
     // There seems to be no text keys for this purpose, except maybe for "[un]equip start/stop",
     // but they are also present in weapon drawing animation.
-    return mAnimation->updateCarriedLeftVisible(weaptype);
+    return (!mSwiftCasting || weaptype != ESM::Weapon::Spell) && mAnimation->updateCarriedLeftVisible(weaptype);
 }
 
 bool CharacterController::updateWeaponState(CharacterState& idle)
@@ -1291,6 +1308,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
         if (mPtr == getPlayer())
             MWBase::Environment::get().getWorld()->getPlayer().setAttackingOrSpell(false);
     }
+    isStillWeapon |= (mUpperBodyState == UpperCharState_CastingSpell || mSpellcasting);
 
     if(!isKnockedOut() && !isKnockedDown() && !isRecovery())
     {
@@ -1301,7 +1319,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
             && !isStillWeapon)
         {
             // We can not play un-equip animation if weapon changed since last update
-            if (!weaponChanged)
+            if (!weaponChanged && (weaptype != ESM::Weapon::HandToHand || mWeaponType == ESM::Weapon::Spell || mSpellcasting))
             {
                 // Note: we do not disable unequipping animation automatically to avoid body desync
                 weapgroup = getWeaponAnimation(mWeaponType);
@@ -1341,7 +1359,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
         {
             // Weapon is changed, no current animation (e.g. unequipping or attack).
             // Start equipping animation now.
-            if (weaptype != mWeaponType)
+            if (weaptype != mWeaponType || (mSwiftCasting && mCurrentWeapon == "spellcast"))
             {
                 forcestateupdate = true;
                 bool useShieldAnims = mAnimation->useShieldAnimations();
@@ -1356,7 +1374,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
                 bool useRelativeDuration = weaponClass == ESM::WeaponType::Ranged;
                 mAnimation->setWeaponGroup(weapgroup, useRelativeDuration);
 
-                if (!isStillWeapon)
+                if (!isStillWeapon && (!mSwiftCasting || mCurrentWeapon != "spellcast"))
                 {
                     mAnimation->disable(mCurrentWeapon);
                     if (weaptype != ESM::Weapon::None)
@@ -1436,7 +1454,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
     bool ammunition = true;
     bool isWeapon = false;
     float weapSpeed = 1.f;
-    if (mPtr.getClass().hasInventoryStore(mPtr))
+    if (!mSpellcasting && (!mSwiftCasting || mCurrentWeapon != "spellcast") && mPtr.getClass().hasInventoryStore(mPtr))
     {
         MWWorld::InventoryStore &inv = cls.getInventoryStore(mPtr);
         MWWorld::ConstContainerStoreIterator weapon = getActiveWeapon(mPtr, &weaptype);
@@ -1464,12 +1482,12 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
     float complete;
     bool animPlaying;
     ESM::WeaponType::Class weapclass = getWeaponType(mWeaponType)->mWeaponClass;
-    if(mAttackingOrSpell)
+    if(mAttackingOrSpell || mSpellcasting)
     {
         MWWorld::Ptr player = getPlayer();
 
         bool resetIdle = ammunition;
-        if(mUpperBodyState == UpperCharState_WeapEquiped && (mHitState == CharState_None || mHitState == CharState_Block))
+        if((mUpperBodyState == UpperCharState_WeapEquiped || mSpellcasting) && (mHitState == CharState_None || mHitState == CharState_Block))
         {
             MWBase::Environment::get().getWorld()->breakInvisibility(mPtr);
             mAttackStrength = 0;
@@ -1482,14 +1500,16 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
                 mCurrentWeapon = chooseRandomAttackAnimation();
             }
 
-            if(mWeaponType == ESM::Weapon::Spell)
+            if(mWeaponType == ESM::Weapon::Spell || mSpellcasting)
             {
                 // Unset casting flag, otherwise pressing the mouse button down would
                 // continue casting every frame if there is no animation
                 mAttackingOrSpell = false;
+                mSpellcasting = false;
                 if (mPtr == player)
                 {
                     MWBase::Environment::get().getWorld()->getPlayer().setAttackingOrSpell(false);
+                    MWBase::Environment::get().getWorld()->getPlayer().setSpellcasting(false);
 
                     // For the player, set the spell we want to cast
                     // This has to be done at the start of the casting animation,
@@ -1575,6 +1595,7 @@ bool CharacterController::updateWeaponState(CharacterState& idle)
 
                         startKey = mAttackType+" start";
                         stopKey = mAttackType+" stop";
+                        mCurrentWeapon = "spellcast";
                     }
 
                     mAnimation->play(mCurrentWeapon, priorityWeapon,
@@ -2852,11 +2873,16 @@ void CharacterController::setAttackingOrSpell(bool attackingOrSpell)
     mAttackingOrSpell = attackingOrSpell;
 }
 
+void CharacterController::setSpellcasting(bool spellcasting)
+{
+    mSpellcasting = spellcasting;
+}
+
 void CharacterController::castSpell(const std::string& spellId, bool manualSpell)
 {
     mAttackingOrSpell = true;
     mCastingManualSpell = manualSpell;
-    ActionSpell action = ActionSpell(spellId);
+    ActionSpell action = ActionSpell(spellId, manualSpell);
     action.prepare(mPtr);
 }
 
