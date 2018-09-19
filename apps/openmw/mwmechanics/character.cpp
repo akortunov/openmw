@@ -2682,7 +2682,7 @@ bool CharacterController::isCastingSpell() const
 
 bool CharacterController::isReadyToBlock() const
 {
-    if (mUpperBodyState >= UpperCharState_MaxAttackToMinHit)
+    if (mUpperBodyState > UpperCharState_WeapEquiped)
         return false;
 
     if (mPtr == getPlayer())
