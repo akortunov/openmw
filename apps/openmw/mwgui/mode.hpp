@@ -29,6 +29,7 @@ namespace MWGui
       GM_Enchanting,
       GM_Recharge,
       GM_Training,
+      GM_MerchantRecharge,
       GM_MerchantRepair,
 
       GM_Levelup,

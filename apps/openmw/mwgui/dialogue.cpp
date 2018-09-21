@@ -374,10 +374,11 @@ namespace MWGui
         const std::string sEnchanting = gmst.find("sEnchanting")->mValue.getString();
         const std::string sServiceTrainingTitle = gmst.find("sServiceTrainingTitle")->mValue.getString();
         const std::string sRepair = gmst.find("sRepair")->mValue.getString();
+        const std::string sRecharge = gmst.find("sRechargeEnchantment")->mValue.getString();
 
         if (topic != sPersuasion && topic != sCompanionShare && topic != sBarter 
          && topic != sSpells && topic != sTravel && topic != sSpellMakingMenuTitle 
-         && topic != sEnchanting && topic != sServiceTrainingTitle && topic != sRepair)
+         && topic != sEnchanting && topic != sServiceTrainingTitle && topic != sRepair && topic != sRecharge)
         {
             onTopicActivated(topic);
             if (mGoodbyeButton->getEnabled())
@@ -403,6 +404,8 @@ namespace MWGui
                 MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Training, mPtr);
             else if (topic == sRepair)
                 MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_MerchantRepair, mPtr);
+            else if (topic == sRecharge)
+                MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_MerchantRecharge, mPtr);
         }
         else
             updateTopics();
@@ -518,7 +521,11 @@ namespace MWGui
             mTopicsList->addItem(gmst.find("sSpellmakingMenuTitle")->mValue.getString());
 
         if (services & ESM::NPC::Enchanting)
+        {
+            // Enchanters also get the recharging
             mTopicsList->addItem(gmst.find("sEnchanting")->mValue.getString());
+            mTopicsList->addItem(gmst.find("sRechargeEnchantment")->mValue.getString());
+        }
 
         if (services & ESM::NPC::Training)
             mTopicsList->addItem(gmst.find("sServiceTrainingTitle")->mValue.getString());

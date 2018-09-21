@@ -112,6 +112,7 @@ namespace MWGui
   class EnchantingDialog;
   class TrainingWindow;
   class SpellIcons;
+  class MerchantRecharge;
   class MerchantRepair;
   class Repair;
   class SoulgemDialog;

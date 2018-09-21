@@ -80,6 +80,7 @@ set(MYGUI_FILES
     openmw_travel_window.layout
     openmw_persuasion_dialog.layout
     openmw_merchantrepair.layout
+    openmw_merchantrecharge.layout
     openmw_repair.layout
     openmw_companion_window.layout
     openmw_savegame_dialog.layout

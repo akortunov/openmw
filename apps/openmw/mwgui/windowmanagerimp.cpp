@@ -97,6 +97,7 @@
 #include "recharge.hpp"
 #include "exposedwindow.hpp"
 #include "cursor.hpp"
+#include "merchantrecharge.hpp"
 #include "merchantrepair.hpp"
 #include "repair.hpp"
 #include "soulgemdialog.hpp"
@@ -540,6 +541,10 @@ namespace MWGui
         MerchantRepair* merchantRepair = new MerchantRepair();
         mWindows.push_back(merchantRepair);
         mGuiModeStates[GM_MerchantRepair] = GuiModeState(merchantRepair);
+
+        MerchantRecharge* merchantRecharge = new MerchantRecharge();
+        mWindows.push_back(merchantRecharge);
+        mGuiModeStates[GM_MerchantRecharge] = GuiModeState(merchantRecharge);
 
         Repair* repair = new Repair();
         mWindows.push_back(repair);
