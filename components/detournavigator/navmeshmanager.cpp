@@ -7,6 +7,8 @@
 #include "settings.hpp"
 #include "sharednavmesh.hpp"
 
+#include <components/debug/debuglog.hpp>
+
 #include <DetourNavMesh.h>
 
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
@@ -83,7 +85,7 @@ namespace DetourNavigator
             return;
         mCache.insert(std::make_pair(agentHalfExtents,
             std::make_shared<NavMeshCacheItem>(makeEmptyNavMesh(mSettings), ++mGenerationCounter)));
-        log("cache add for agent=", agentHalfExtents);
+        Log(Debug::Verbose) << "cache add for agent=" << agentHalfExtents;
     }
 
     void NavMeshManager::reset(const osg::Vec3f& agentHalfExtents)
@@ -168,9 +170,9 @@ namespace DetourNavigator
             });
         }
         mAsyncNavMeshUpdater.post(agentHalfExtents, cached, playerTile, tilesToPost);
-        log("cache update posted for agent=", agentHalfExtents,
-            " playerTile=", lastPlayerTile->second,
-            " recastMeshManagerRevision=", lastRevision);
+        Log(Debug::Verbose) << "cache update posted for agent=" << agentHalfExtents <<
+            " playerTile=" << lastPlayerTile->second <<
+            " recastMeshManagerRevision=" << lastRevision;
     }
 
     void NavMeshManager::wait()

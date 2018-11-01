@@ -16,6 +16,8 @@
 #include <Recast.h>
 #include <RecastAlloc.h>
 
+#include <components/debug/debuglog.hpp>
+
 #include <algorithm>
 #include <iomanip>
 #include <limits>
@@ -501,16 +503,16 @@ namespace DetourNavigator
         const std::vector<OffMeshConnection>& offMeshConnections, const Settings& settings,
         const SharedNavMeshCacheItem& navMeshCacheItem, NavMeshTilesCache& navMeshTilesCache)
     {
-        log("update NavMesh with mutiple tiles:",
-            " agentHeight=", std::setprecision(std::numeric_limits<float>::max_exponent10),
-            getHeight(settings, agentHalfExtents),
-            " agentMaxClimb=", std::setprecision(std::numeric_limits<float>::max_exponent10),
-            getMaxClimb(settings),
-            " agentRadius=", std::setprecision(std::numeric_limits<float>::max_exponent10),
-            getRadius(settings, agentHalfExtents),
-            " changedTile=", changedTile,
-            " playerTile=", playerTile,
-            " changedTileDistance=", getDistance(changedTile, playerTile));
+        Log(Debug::Verbose) << "update NavMesh with mutiple tiles:" <<
+            " agentHeight=" << std::setprecision(std::numeric_limits<float>::max_exponent10) <<
+            getHeight(settings, agentHalfExtents) <<
+            " agentMaxClimb=" << std::setprecision(std::numeric_limits<float>::max_exponent10) <<
+            getMaxClimb(settings) <<
+            " agentRadius=" << std::setprecision(std::numeric_limits<float>::max_exponent10) <<
+            getRadius(settings, agentHalfExtents) <<
+            " changedTile=" << changedTile <<
+            " playerTile=" << playerTile <<
+            " changedTileDistance=" << getDistance(changedTile, playerTile);
 
         const auto params = *navMeshCacheItem.lockConst()->getValue().getParams();
         const osg::Vec3f origin(params.orig[0], params.orig[1], params.orig[2]);
@@ -530,7 +532,7 @@ namespace DetourNavigator
 
         if (!recastMesh)
         {
-            log("ignore add tile: recastMesh is null");
+            Log(Debug::Verbose) << "ignore add tile: recastMesh is null";
             return removeTile();
         }
 
@@ -545,13 +547,13 @@ namespace DetourNavigator
 
         if (isEmpty(recastMeshBounds))
         {
-            log("ignore add tile: recastMesh is empty");
+            Log(Debug::Verbose) << "ignore add tile: recastMesh is empty";
             return removeTile();
         }
 
         if (!shouldAddTile(changedTile, playerTile, params.maxTiles))
         {
-            log("ignore add tile: too far from player");
+            Log(Debug::Verbose) << "ignore add tile: too far from player";
             return removeTile();
         }
 
@@ -568,7 +570,7 @@ namespace DetourNavigator
 
             if (!navMeshData.mValue)
             {
-                log("ignore add tile: NavMeshData is null");
+                Log(Debug::Verbose) << "ignore add tile: NavMeshData is null";
                 return removeTile();
             }
 
@@ -585,7 +587,7 @@ namespace DetourNavigator
 
             if (!cachedNavMeshData)
             {
-                log("cache overflow");
+                Log(Debug::Verbose) << "cache overflow";
 
                 const auto locked = navMeshCacheItem.lock();
                 auto& navMesh = locked->getValue();
@@ -603,7 +605,7 @@ namespace DetourNavigator
                 {
                     if (removed)
                         locked->removeUsedTile(changedTile);
-                    log("failed to add tile with status=", WriteDtStatus {addStatus});
+                    Log(Debug::Verbose) << "failed to add tile with status=" << WriteDtStatus {addStatus};
                     return makeUpdateNavMeshStatus(removed, false);
                 }
             }
@@ -625,7 +627,7 @@ namespace DetourNavigator
         {
             if (removed)
                 locked->removeUsedTile(changedTile);
-            log("failed to add tile with status=", WriteDtStatus {addStatus});
+            Log(Debug::Verbose) << "failed to add tile with status=" << WriteDtStatus {addStatus};
             return makeUpdateNavMeshStatus(removed, false);
         }
     }

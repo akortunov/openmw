@@ -305,7 +305,6 @@ namespace MWMechanics
         }
         catch (const DetourNavigator::NavigatorException& exception)
         {
-            DetourNavigator::log("PathFinder::buildPathByNavigator navigator exception: ", exception.what());
             Log(Debug::Verbose) << "Build path by navigator exception: \"" << exception.what()
                 << "\" for \"" << actor.getClass().getName(actor) << "\" (" << actor.getBase()
                 << ") from " << startPoint << " to " << endPoint << " with flags ("

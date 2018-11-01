@@ -87,7 +87,7 @@ namespace DetourNavigator
                                 makePriority(changedTile.first, changedTile.second, playerTile)});
         }
 
-        log("posted ", mJobs.size(), " jobs");
+        Log(Debug::Verbose) << "posted " << mJobs.size() << " jobs";
 
         mHasJob.notify_all();
     }
@@ -100,7 +100,7 @@ namespace DetourNavigator
 
     void AsyncNavMeshUpdater::process() throw()
     {
-        log("start process jobs");
+        Log(Debug::Verbose) << "start process jobs";
         while (!mShouldStop)
         {
             try
@@ -110,15 +110,15 @@ namespace DetourNavigator
             }
             catch (const std::exception& e)
             {
-                DetourNavigator::log("AsyncNavMeshUpdater::process exception: ", e.what());
+                Log(Debug::Error) << "AsyncNavMeshUpdater::process exception: ", e.what();
             }
         }
-        log("stop process jobs");
+        Log(Debug::Verbose) << "stop process jobs";
     }
 
     void AsyncNavMeshUpdater::processJob(const Job& job)
     {
-        log("process job for agent=", job.mAgentHalfExtents);
+        Log(Debug::Verbose) << "process job for agent=" << job.mAgentHalfExtents;
 
         const auto start = std::chrono::steady_clock::now();
 
@@ -138,11 +138,11 @@ namespace DetourNavigator
         using FloatMs = std::chrono::duration<float, std::milli>;
 
         const auto locked = job.mNavMeshCacheItem.lockConst();
-        log("cache updated for agent=", job.mAgentHalfExtents, " status=", status,
-            " generation=", locked->getGeneration(),
-            " revision=", locked->getNavMeshRevision(),
-            " time=", std::chrono::duration_cast<FloatMs>(finish - start).count(), "ms",
-            " total_time=", std::chrono::duration_cast<FloatMs>(finish - firstStart).count(), "ms");
+        Log(Debug::Verbose) << "cache updated for agent=" << job.mAgentHalfExtents << " status=" << status <<
+            " generation=" << locked->getGeneration() <<
+            " revision=" << locked->getNavMeshRevision() <<
+            " time=" << std::chrono::duration_cast<FloatMs>(finish - start).count() << "ms" <<
+            " total_time=" << std::chrono::duration_cast<FloatMs>(finish - firstStart).count() << "ms";
     }
 
     boost::optional<AsyncNavMeshUpdater::Job> AsyncNavMeshUpdater::getNextJob()
@@ -156,7 +156,7 @@ namespace DetourNavigator
             mDone.notify_all();
             return boost::none;
         }
-        log("got ", mJobs.size(), " jobs");
+        Log(Debug::Verbose) << "got " << mJobs.size() << " jobs";
         const auto job = mJobs.top();
         mJobs.pop();
         const auto pushed = mPushed.find(job.mAgentHalfExtents);
