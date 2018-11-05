@@ -87,7 +87,7 @@ namespace DetourNavigator
                                 makePriority(changedTile.first, changedTile.second, playerTile)});
         }
 
-        Log(Debug::Verbose) << "posted " << mJobs.size() << " jobs";
+        Log(Debug::Verbose) << "Posted " << mJobs.size() << " navigator jobs";
 
         mHasJob.notify_all();
     }
@@ -100,7 +100,7 @@ namespace DetourNavigator
 
     void AsyncNavMeshUpdater::process() throw()
     {
-        Log(Debug::Verbose) << "start process jobs";
+        Log(Debug::Verbose) << "Start process navigator jobs";
         while (!mShouldStop)
         {
             try
@@ -113,12 +113,12 @@ namespace DetourNavigator
                 Log(Debug::Error) << "AsyncNavMeshUpdater::process exception: ", e.what();
             }
         }
-        Log(Debug::Verbose) << "stop process jobs";
+        Log(Debug::Verbose) << "Stop navigator jobs processing";
     }
 
     void AsyncNavMeshUpdater::processJob(const Job& job)
     {
-        Log(Debug::Verbose) << "process job for agent=" << job.mAgentHalfExtents;
+        Log(Debug::Verbose) << "Process job for agent=(" << std::fixed << std::setprecision(2) << job.mAgentHalfExtents << ")";
 
         const auto start = std::chrono::steady_clock::now();
 
@@ -138,7 +138,9 @@ namespace DetourNavigator
         using FloatMs = std::chrono::duration<float, std::milli>;
 
         const auto locked = job.mNavMeshCacheItem.lockConst();
-        Log(Debug::Verbose) << "cache updated for agent=" << job.mAgentHalfExtents << " status=" << status <<
+        Log(Debug::Verbose) << std::fixed << std::setprecision(2) <<
+            "Cache updated for agent=(" << job.mAgentHalfExtents << ")" <<
+            " status=" << status <<
             " generation=" << locked->getGeneration() <<
             " revision=" << locked->getNavMeshRevision() <<
             " time=" << std::chrono::duration_cast<FloatMs>(finish - start).count() << "ms" <<
@@ -156,7 +158,7 @@ namespace DetourNavigator
             mDone.notify_all();
             return boost::none;
         }
-        Log(Debug::Verbose) << "got " << mJobs.size() << " jobs";
+        Log(Debug::Verbose) << "Got " << mJobs.size() << " navigator jobs";
         const auto job = mJobs.top();
         mJobs.pop();
         const auto pushed = mPushed.find(job.mAgentHalfExtents);
