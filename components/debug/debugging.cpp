@@ -13,6 +13,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#ifdef _WIN32
+#include <wincon.h>
+#endif
+
 namespace Debug
 {
     spdlog::level::level_enum GetCurrentDebugLevel()
@@ -62,20 +66,28 @@ int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, c
         if(boost::filesystem::exists(logFile))
             boost::filesystem::remove(logFile);
 
-        // globally register the loggers so so the can be accessed using spdlog::get(logger_name)
-        auto console_logger = spdlog::stdout_color_mt(Debug::Sink::Console);
-        auto file_logger = spdlog::basic_logger_mt(Debug::Sink::GenericFile, logFile.string());
-        console_logger->set_pattern("%^%v%$");
-        file_logger->set_pattern("%v");
-
-        // TODO: for now we can not set custom colors
-        //console_logger->set_color(spdlog::level::err, "\033[91m"); // red
-        //console_logger->set_color(spdlog::level::warn, "\033[93m"); // yellow
-        //console_logger->set_color(spdlog::level::info, "\033[m"); // default
-        //console_logger->set_color(spdlog::level::debug, "\033[90m"); // dark-gray
-
         spdlog::level::level_enum level = Debug::GetCurrentDebugLevel();
+
+        // TODO: find out a more reliable way (especially for windows)
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+#ifdef _WIN32
+        console_sink->set_color(spdlog::level::err, RED); // red
+        console_sink->set_color(spdlog::level::warn, YELLOW); // yellow
+        console_sink->set_color(spdlog::level::info, LIGHTGRAY); // default
+        console_sink->set_color(spdlog::level::debug, DARKGRAY); // dark-gray
+#else
+        console_sink->set_color(spdlog::level::err, "\033[91m"); // red
+        console_sink->set_color(spdlog::level::warn, "\033[93m"); // yellow
+        console_sink->set_color(spdlog::level::info, "\033[m"); // default
+        console_sink->set_color(spdlog::level::debug, "\033[90m"); // dark-gray
+#endif
+        console_sink->set_pattern("%^%v%$");
+        auto console_logger = std::make_shared<spdlog::logger>(Debug::Sink::Console, console_sink);
         console_logger->set_level(level);
+        spdlog::register_logger(console_logger);
+
+        auto file_logger = spdlog::basic_logger_mt(Debug::Sink::GenericFile, logFile.string());
+        file_logger->set_pattern("%v");
         file_logger->set_level(level);
 
         // install the crash handler as soon as possible. note that the log path
