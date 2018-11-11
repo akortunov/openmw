@@ -59,6 +59,10 @@ namespace Debug
     {
         Files::ConfigurationManager cfgMgr;
         auto filePath = cfgMgr.getLogPath() / logName;
+        // remove old log file if exists
+        if(boost::filesystem::exists(filePath))
+            boost::filesystem::remove(filePath);
+
         auto logger = spdlog::basic_logger_mt(sinkName, filePath.string());
         logger->set_pattern("%v");
         logger->set_level(MapDebugLevel(level));
@@ -73,13 +77,6 @@ int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, c
     int ret = 0;
     try
     {
-        Files::ConfigurationManager cfgMgr;
-        auto logFile = cfgMgr.getLogPath() / logName;
-
-        // remove old log file if exists
-        if(boost::filesystem::exists(logFile))
-            boost::filesystem::remove(logFile);
-
         spdlog::level::level_enum level = Debug::GetCurrentDebugLevel();
 
         // TODO: find out a more reliable way (especially for windows)
@@ -100,12 +97,11 @@ int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, c
         console_logger->set_level(level);
         spdlog::register_logger(console_logger);
 
-        auto file_logger = spdlog::basic_logger_mt(Debug::Sink::GenericFile, logFile.string());
-        file_logger->set_pattern("%v");
-        file_logger->set_level(level);
+        Debug::createFileSink(Debug::Sink::GenericFile, logName, Debug::CurrentDebugLevel);
 
         // install the crash handler as soon as possible. note that the log path
         // does not depend on config being read.
+        Files::ConfigurationManager cfgMgr;
         crashCatcherInstall(argc, argv, (cfgMgr.getLogPath() / crashLogName).string());
 
         ret = innerApplication(argc, argv);
