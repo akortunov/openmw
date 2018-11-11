@@ -10,7 +10,7 @@ namespace Debug
     Level CurrentDebugLevel = Level::NoLevel;
 }
 
-void Log::LogImpl(std::string msg, Debug::Level level)
+void Log::LogImpl(std::string msg, std::string sinkName, Debug::Level level)
 {
     spdlog::level::level_enum spdLevel;
     switch (level)
@@ -29,8 +29,25 @@ void Log::LogImpl(std::string msg, Debug::Level level)
             break;
     }
 
-    spdlog::get(Debug::Sink::Console)->log(spdLevel, msg);
-    spdlog::get(Debug::Sink::GenericFile)->log(spdLevel, msg);
+    // Log to console and common log file, if the sink was not specified
+    if (sinkName.empty())
+    {
+        auto consoleSink = spdlog::get(Debug::Sink::Console);
+        if (consoleSink)
+            consoleSink->log(spdLevel, msg);
+        else
+            std::cout << msg << std::endl;
+
+        auto fileSink = spdlog::get(Debug::Sink::GenericFile);
+        if (fileSink)
+            fileSink->log(spdLevel, msg);
+    }
+    else
+    {
+        auto sink = spdlog::get(sinkName);
+        if (sink)
+            sink->log(spdLevel, msg);
+    }
 }
 
 std::mutex Log::sLock;

@@ -85,7 +85,7 @@ namespace DetourNavigator
             return;
         mCache.insert(std::make_pair(agentHalfExtents,
             std::make_shared<NavMeshCacheItem>(makeEmptyNavMesh(mSettings), ++mGenerationCounter)));
-        Log(Debug::Verbose) << "cache add for agent=" << agentHalfExtents;
+        Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "cache add for agent=" << agentHalfExtents;
     }
 
     void NavMeshManager::reset(const osg::Vec3f& agentHalfExtents)
@@ -170,7 +170,8 @@ namespace DetourNavigator
             });
         }
         mAsyncNavMeshUpdater.post(agentHalfExtents, cached, playerTile, tilesToPost);
-        Log(Debug::Verbose) << "cache update posted for agent=" << agentHalfExtents <<
+        Log(Debug::Verbose, Debug::Sink::NavigatorFile) <<
+            "cache update posted for agent=" << agentHalfExtents <<
             " playerTile=" << lastPlayerTile->second <<
             " recastMeshManagerRevision=" << lastRevision;
     }

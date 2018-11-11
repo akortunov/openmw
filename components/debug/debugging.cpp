@@ -19,6 +19,21 @@
 
 namespace Debug
 {
+    spdlog::level::level_enum MapDebugLevel(Level level)
+    {
+        switch (level)
+        {
+            case Error:
+                return spdlog::level::err;
+            case Warning:
+                return spdlog::level::warn;
+            case Info:
+                return spdlog::level::info;
+            default:
+                return spdlog::level::debug;
+        }
+    }
+
     spdlog::level::level_enum GetCurrentDebugLevel()
     {
         const char* env = getenv("OPENMW_DEBUG_LEVEL");
@@ -37,17 +52,16 @@ namespace Debug
         else
             CurrentDebugLevel = Verbose;
 
-        switch (CurrentDebugLevel)
-        {
-            case Error:
-                return spdlog::level::err;
-            case Warning:
-                return spdlog::level::warn;
-            case Info:
-                return spdlog::level::info;
-            default:
-                return spdlog::level::debug;
-        }
+        return MapDebugLevel(CurrentDebugLevel);
+    }
+
+    void createFileSink(const std::string& sinkName, const std::string& logName, Level level)
+    {
+        Files::ConfigurationManager cfgMgr;
+        auto filePath = cfgMgr.getLogPath() / logName;
+        auto logger = spdlog::basic_logger_mt(sinkName, filePath.string());
+        logger->set_pattern("%v");
+        logger->set_level(MapDebugLevel(level));
     }
 }
 

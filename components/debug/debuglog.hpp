@@ -25,6 +25,7 @@ namespace Debug
     {
         const std::string Console = "console_logger";
         const std::string GenericFile = "file_logger";
+        const std::string NavigatorFile = "navigator_logger";
     }
 
     extern Level CurrentDebugLevel;
@@ -39,16 +40,18 @@ public:
     // Locks a global lock while the object is alive
     Log(Debug::Level level) :
     mLock(sLock),
-    mLevel(level)
+    mLevel(level),
+    mSinkName("")
     {
         mStream = std::stringstream();
-        // If the app has no logging system enabled, log level is not specified.
-        // Show all messages without marker - we just use the plain cout in this case.
-        //if (Debug::CurrentDebugLevel == Debug::NoLevel)
-        //    return;
+    }
 
-        //if (mLevel <= Debug::CurrentDebugLevel)
-        //    std::cout << static_cast<unsigned char>(mLevel);
+    Log(Debug::Level level, const std::string& sinkName) :
+    mLock(sLock),
+    mLevel(level),
+    mSinkName(sinkName)
+    {
+        mStream = std::stringstream();
     }
 
     // Perfect forwarding wrappers to give the chain of objects to cout
@@ -61,14 +64,15 @@ public:
 
     ~Log()
     {
-        LogImpl(mStream.str(), mLevel);
+        LogImpl(mStream.str(), mSinkName, mLevel);
     }
 
 private:
     Debug::Level mLevel;
+    std::string mSinkName;
     std::stringstream mStream;
 
-    void LogImpl(std::string msg, Debug::Level level);
+    void LogImpl(std::string msg, std::string sinkName, Debug::Level level);
 };
 
 #endif

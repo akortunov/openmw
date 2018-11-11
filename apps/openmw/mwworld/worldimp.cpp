@@ -6,7 +6,7 @@
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 
-#include <components/debug/debuglog.hpp>
+#include <components/debug/debugging.hpp>
 
 #include <components/esm/esmreader.hpp>
 #include <components/esm/esmwriter.hpp>
@@ -227,6 +227,12 @@ namespace MWWorld
         navigatorSettings.mNavMeshPathPrefix = Settings::Manager::getString("nav mesh path prefix", "Navigator");
         navigatorSettings.mEnableRecastMeshFileNameRevision = Settings::Manager::getBool("enable recast mesh file name revision", "Navigator");
         navigatorSettings.mEnableNavMeshFileNameRevision = Settings::Manager::getBool("enable nav mesh file name revision", "Navigator");
+        if (Settings::Manager::getBool("enable log", "Navigator"))
+        {
+            const std::string logName = Settings::Manager::getString("log path", "Navigator");
+            Debug::createFileSink(Debug::Sink::NavigatorFile, logName, Debug::Verbose);
+        }
+
         DetourNavigator::RecastGlobalAllocator::init();
         mNavigator.reset(new DetourNavigator::Navigator(navigatorSettings));
 

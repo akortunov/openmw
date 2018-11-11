@@ -503,7 +503,7 @@ namespace DetourNavigator
         const std::vector<OffMeshConnection>& offMeshConnections, const Settings& settings,
         const SharedNavMeshCacheItem& navMeshCacheItem, NavMeshTilesCache& navMeshTilesCache)
     {
-        Log(Debug::Verbose) << std::fixed << std::setprecision(2) <<
+        Log(Debug::Verbose, Debug::Sink::NavigatorFile) << std::fixed << std::setprecision(2) <<
             "Update NavMesh with multiple tiles:" <<
             " agentHeight=" << getHeight(settings, agentHalfExtents) <<
             " agentMaxClimb=" << getMaxClimb(settings) <<
@@ -530,7 +530,7 @@ namespace DetourNavigator
 
         if (!recastMesh)
         {
-            Log(Debug::Verbose) << "Ignore add tile: recastMesh is null";
+            Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Ignore add tile: recastMesh is null";
             return removeTile();
         }
 

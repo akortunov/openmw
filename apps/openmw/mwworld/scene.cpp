@@ -332,6 +332,7 @@ namespace MWWorld
     void Scene::unloadCell (CellStoreCollection::iterator iter)
     {
         Log(Debug::Info) << "Unloading cell " << (*iter)->getCell()->getDescription();
+        Log(Debug::Info, Debug::Sink::NavigatorFile) << "Unloading cell " << (*iter)->getCell()->getDescription();
 
         const auto navigator = MWBase::Environment::get().getWorld()->getNavigator();
         ListAndResetObjectsVisitor visitor;
@@ -392,6 +393,7 @@ namespace MWWorld
         if(result.second)
         {
             Log(Debug::Info) << "Loading cell " << cell->getCell()->getDescription();
+            Log(Debug::Info, Debug::Sink::NavigatorFile) << "Loading cell " << cell->getCell()->getDescription();
 
             float verts = ESM::Land::LAND_SIZE;
             float worldsize = ESM::Land::REAL_SIZE;

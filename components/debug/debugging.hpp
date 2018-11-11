@@ -3,6 +3,11 @@
 
 #include "debuglog.hpp"
 
+namespace Debug
+{
+    void createFileSink(const std::string& sinkName, const std::string& logName, Level level);
+}
+
 int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, char *argv[], const std::string& appName);
 
 #endif
