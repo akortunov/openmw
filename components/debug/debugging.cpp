@@ -2,33 +2,20 @@
 
 #include <components/crashcatcher/crashcatcher.hpp>
 
+#include <components/files/configurationmanager.hpp>
+
+#include <boost/filesystem/fstream.hpp>
+#include <boost/iostreams/stream.hpp>
+
+#include <SDL_messagebox.h>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
 namespace Debug
 {
-    std::streamsize DebugOutputBase::write(const char *str, std::streamsize size)
-    {
-        // Skip debug level marker
-        Level level = getLevelMarker(str);
-        if (level != NoLevel)
-        {
-            writeImpl(str+1, size-1, level);
-            return size;
-        }
-
-        writeImpl(str, size, NoLevel);
-        return size;
-    }
-
-    Level DebugOutputBase::getLevelMarker(const char *str)
-    {
-        if (unsigned(*str) <= unsigned(Marker))
-        {
-            return Level(*str);
-        }
-
-        return NoLevel;
-    }
-
-    void DebugOutputBase::fillCurrentDebugLevel()
+    spdlog::level::level_enum GetCurrentDebugLevel()
     {
         const char* env = getenv("OPENMW_DEBUG_LEVEL");
         if (env)
@@ -42,53 +29,54 @@ namespace Debug
                 CurrentDebugLevel = Info;
             else if (value == "VERBOSE")
                 CurrentDebugLevel = Verbose;
-
-            return;
         }
+        else
+            CurrentDebugLevel = Verbose;
 
-        CurrentDebugLevel = Verbose;
+        switch (CurrentDebugLevel)
+        {
+            case Error:
+                return spdlog::level::err;
+            case Warning:
+                return spdlog::level::warn;
+            case Info:
+                return spdlog::level::info;
+            default:
+                return spdlog::level::debug;
+        }
     }
 }
 
 int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, char *argv[], const std::string& appName)
 {
-    // Some objects used to redirect cout and cerr
-    // Scope must be here, so this still works inside the catch block for logging exceptions
-    std::streambuf* cout_rdbuf = std::cout.rdbuf ();
-    std::streambuf* cerr_rdbuf = std::cerr.rdbuf ();
-
-#if !(defined(_WIN32) && defined(_DEBUG))
-    boost::iostreams::stream_buffer<Debug::Tee> coutsb;
-    boost::iostreams::stream_buffer<Debug::Tee> cerrsb;
-#endif
-
     const std::string logName = Misc::StringUtils::lowerCase(appName) + ".log";
     const std::string crashLogName = Misc::StringUtils::lowerCase(appName) + "-crash.log";
-    boost::filesystem::ofstream logfile;
 
     int ret = 0;
     try
     {
         Files::ConfigurationManager cfgMgr;
+        auto logFile = cfgMgr.getLogPath() / logName;
 
-#if defined(_WIN32) && defined(_DEBUG)
-        // Redirect cout and cerr to VS debug output when running in debug mode
-        boost::iostreams::stream_buffer<Debug::DebugOutput> sb;
-        sb.open(Debug::DebugOutput());
-        std::cout.rdbuf (&sb);
-        std::cerr.rdbuf (&sb);
-#else
-        // Redirect cout and cerr to the log file
-        logfile.open (boost::filesystem::path(cfgMgr.getLogPath() / logName));
+        // remove old log file if exists
+        if(boost::filesystem::exists(logFile))
+            boost::filesystem::remove(logFile);
 
-        std::ostream oldcout(cout_rdbuf);
-        std::ostream oldcerr(cerr_rdbuf);
-        coutsb.open (Debug::Tee(logfile, oldcout));
-        cerrsb.open (Debug::Tee(logfile, oldcerr));
+        // globally register the loggers so so the can be accessed using spdlog::get(logger_name)
+        auto console_logger = spdlog::stdout_color_mt(Debug::Sink::Console);
+        auto file_logger = spdlog::basic_logger_mt(Debug::Sink::GenericFile, logFile.string());
+        console_logger->set_pattern("%^%v%$");
+        file_logger->set_pattern("%v");
 
-        std::cout.rdbuf (&coutsb);
-        std::cerr.rdbuf (&cerrsb);
-#endif
+        // TODO: for now we can not set custom colors
+        //console_logger->set_color(spdlog::level::err, "\033[91m"); // red
+        //console_logger->set_color(spdlog::level::warn, "\033[93m"); // yellow
+        //console_logger->set_color(spdlog::level::info, "\033[m"); // default
+        //console_logger->set_color(spdlog::level::debug, "\033[90m"); // dark-gray
+
+        spdlog::level::level_enum level = Debug::GetCurrentDebugLevel();
+        console_logger->set_level(level);
+        file_logger->set_level(level);
 
         // install the crash handler as soon as possible. note that the log path
         // does not depend on config being read.
@@ -107,10 +95,6 @@ int wrapApplication(int (*innerApplication)(int argc, char *argv[]), int argc, c
 
         ret = 1;
     }
-
-    // Restore cout and cerr
-    std::cout.rdbuf(cout_rdbuf);
-    std::cerr.rdbuf(cerr_rdbuf);
 
     return ret;
 }

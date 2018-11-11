@@ -3,8 +3,10 @@
 
 #include <mutex>
 #include <iostream>
+#include <sstream>
 
 #include <osg/io_utils>
+
 
 namespace Debug
 {
@@ -18,6 +20,12 @@ namespace Debug
 
         NoLevel = 5 // Do not filter messages in this case
     };
+
+    namespace Sink
+    {
+        const std::string Console = "console_logger";
+        const std::string GenericFile = "file_logger";
+    }
 
     extern Level CurrentDebugLevel;
 }
@@ -33,33 +41,34 @@ public:
     mLock(sLock),
     mLevel(level)
     {
+        mStream = std::stringstream();
         // If the app has no logging system enabled, log level is not specified.
         // Show all messages without marker - we just use the plain cout in this case.
-        if (Debug::CurrentDebugLevel == Debug::NoLevel)
-            return;
+        //if (Debug::CurrentDebugLevel == Debug::NoLevel)
+        //    return;
 
-        if (mLevel <= Debug::CurrentDebugLevel)
-            std::cout << static_cast<unsigned char>(mLevel);
+        //if (mLevel <= Debug::CurrentDebugLevel)
+        //    std::cout << static_cast<unsigned char>(mLevel);
     }
 
     // Perfect forwarding wrappers to give the chain of objects to cout
     template<typename T>
     Log& operator<<(T&& rhs)
     {
-        if (mLevel <= Debug::CurrentDebugLevel)
-            std::cout << std::forward<T>(rhs);
-
+        mStream << rhs;
         return *this;
     }
 
     ~Log()
     {
-        if (mLevel <= Debug::CurrentDebugLevel)
-            std::cout << std::endl;
+        LogImpl(mStream.str(), mLevel);
     }
 
 private:
     Debug::Level mLevel;
+    std::stringstream mStream;
+
+    void LogImpl(std::string msg, Debug::Level level);
 };
 
 #endif
