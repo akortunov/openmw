@@ -545,13 +545,13 @@ namespace DetourNavigator
 
         if (isEmpty(recastMeshBounds))
         {
-            Log(Debug::Verbose) << "Ignore add tile: recastMesh is empty";
+            Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Ignore add tile: recastMesh is empty";
             return removeTile();
         }
 
         if (!shouldAddTile(changedTile, playerTile, params.maxTiles))
         {
-            Log(Debug::Verbose) << "Ignore add tile: too far from player";
+            Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Ignore add tile: too far from player";
             return removeTile();
         }
 
@@ -568,7 +568,7 @@ namespace DetourNavigator
 
             if (!navMeshData.mValue)
             {
-                Log(Debug::Verbose) << "Ignore add tile: NavMeshData is null";
+                Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Ignore add tile: NavMeshData is null";
                 return removeTile();
             }
 
@@ -585,7 +585,7 @@ namespace DetourNavigator
 
             if (!cachedNavMeshData)
             {
-                Log(Debug::Verbose) << "Navigator cache overflow";
+                Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Navigator cache overflow";
 
                 const auto locked = navMeshCacheItem.lock();
                 auto& navMesh = locked->getValue();
@@ -603,7 +603,7 @@ namespace DetourNavigator
                 {
                     if (removed)
                         locked->removeUsedTile(changedTile);
-                    Log(Debug::Verbose) << "Failed to add tile with status=" << WriteDtStatus {addStatus};
+                    Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Failed to add tile with status=" << WriteDtStatus {addStatus};
                     return makeUpdateNavMeshStatus(removed, false);
                 }
             }
@@ -625,7 +625,7 @@ namespace DetourNavigator
         {
             if (removed)
                 locked->removeUsedTile(changedTile);
-            Log(Debug::Verbose) << "Failed to add tile with status=" << WriteDtStatus {addStatus};
+            Log(Debug::Verbose, Debug::Sink::NavigatorFile) << "Failed to add tile with status=" << WriteDtStatus {addStatus};
             return makeUpdateNavMeshStatus(removed, false);
         }
     }
