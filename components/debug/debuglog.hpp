@@ -1,7 +1,6 @@
 #ifndef DEBUG_LOG_H
 #define DEBUG_LOG_H
 
-#include <mutex>
 #include <iostream>
 #include <sstream>
 
@@ -33,13 +32,9 @@ namespace Debug
 
 class Log
 {
-    static std::mutex sLock;
-
-    std::unique_lock<std::mutex> mLock;
 public:
     // Locks a global lock while the object is alive
     Log(Debug::Level level) :
-    mLock(sLock),
     mLevel(level),
     mSinkName("")
     {
@@ -47,7 +42,6 @@ public:
     }
 
     Log(Debug::Level level, const std::string& sinkName) :
-    mLock(sLock),
     mLevel(level),
     mSinkName(sinkName)
     {

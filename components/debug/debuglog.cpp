@@ -49,5 +49,3 @@ void Log::LogImpl(std::string msg, std::string sinkName, Debug::Level level)
             sink->log(spdLevel, msg);
     }
 }
-
-std::mutex Log::sLock;
