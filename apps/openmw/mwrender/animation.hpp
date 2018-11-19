@@ -198,6 +198,11 @@ protected:
         int mBlendMask;
         bool mAutoDisable;
 
+        std::string mGroup;
+        std::string mStartKey;
+        std::string mStopKey;
+        bool mLoopFallback;
+
         AnimState() : mStartTime(0.0f), mLoopStartTime(0.0f), mLoopStopTime(0.0f), mStopTime(0.0f),
                       mTime(new float), mSpeedMult(1.0f), mPlaying(false), mLoopingEnabled(true),
                       mLoopCount(0), mPriority(0), mBlendMask(0), mAutoDisable(true)

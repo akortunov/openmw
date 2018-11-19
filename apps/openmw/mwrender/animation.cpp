@@ -940,6 +940,10 @@ namespace MWRender
                 state.mPriority = priority;
                 state.mBlendMask = blendMask;
                 state.mAutoDisable = autodisable;
+                state.mGroup = groupname;
+                state.mStartKey = start;
+                state.mStopKey = stop;
+                state.mLoopFallback = loopfallback;
                 mStates[groupname] = state;
 
                 if (state.mPlaying)

@@ -143,7 +143,7 @@ public:
     void updateParts();
 
     /// Rebuilds the NPC, updating their root model, animation sources, and equipment.
-    void rebuild();
+    void rebuild(bool keepAnims = false);
 
     /// Get the inventory slot that the given node path leads into, or -1 if not found.
     int getSlot(const osg::NodePath& path) const;

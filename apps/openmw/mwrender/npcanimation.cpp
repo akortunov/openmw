@@ -317,7 +317,7 @@ void NpcAnimation::setViewMode(NpcAnimation::ViewMode viewMode)
         mWeaponSheathing = Settings::Manager::getBool("weapon sheathing", "Game");
 
     mViewMode = viewMode;
-    rebuild();
+    rebuild(true);
 
     setRenderBin();
 }
@@ -395,10 +395,31 @@ void NpcAnimation::setRenderBin()
         Animation::setRenderBin();
 }
 
-void NpcAnimation::rebuild()
+void NpcAnimation::rebuild(bool keepAnims)
 {
     mScabbard.reset();
-    updateNpcBase();
+
+    if (keepAnims)
+    {
+        AnimStateMap animCopy(mStates);
+
+        updateNpcBase();
+
+        for (auto& statePair : animCopy)
+        {
+            AnimState& state = statePair.second;
+            if (!state.mPlaying)
+                continue;
+
+            float startPoint = (*state.mTime.get() - state.mStartTime) / (state.mStopTime - state.mStartTime);
+            play(state.mGroup, state.mPriority, state.mBlendMask, state.mAutoDisable, state.mSpeedMult,
+                            state.mStartKey, state.mStopKey, startPoint, state.mLoopCount, state.mLoopFallback);
+            std::cout << "Play: " << state.mGroup << " " << state.mStartKey << " " << state.mStopKey << " " << startPoint << std::endl;
+        }
+        animCopy.clear();
+    }
+    else
+        updateNpcBase();
 
     MWBase::Environment::get().getMechanicsManager()->forceStateUpdate(mPtr);
 }
