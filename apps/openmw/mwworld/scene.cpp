@@ -592,24 +592,6 @@ namespace MWWorld
             unloadCell (active++);
         }
 
-        CellStoreCollection::iterator dist = mDistantCells.begin();
-        while (dist!=mDistantCells.end())
-        {
-            /*
-            if ((*dist)->getCell()->isExterior())
-            {
-                if (std::abs (playerCellX-(*dist)->getCell()->getGridX())<=mHalfGridSize &&
-                    std::abs (playerCellY-(*dist)->getCell()->getGridY())<=mHalfGridSize)
-                {
-                    // keep cells within the new grid
-                    ++dist;
-                    continue;
-                }
-            }
-            */
-            unloadDistantCell (dist++);
-        }
-
         std::size_t refsToLoad = 0;
         std::vector<std::pair<int, int>> cellsPositionsToLoad;
         std::vector<std::pair<int, int>> distantCellsPositionsToLoad;
@@ -681,6 +663,39 @@ namespace MWWorld
 
                 loadCell (cell, loadingListener, changeEvent);
             }
+        }
+
+        CellStoreCollection::iterator dist = mDistantCells.begin();
+        while (dist!=mDistantCells.end())
+        {
+            if ((*dist)->getCell()->isExterior())
+            {
+                if (std::abs (playerCellX-(*dist)->getCell()->getGridX())<=mDistantLandDistance &&
+                    std::abs (playerCellY-(*dist)->getCell()->getGridY())<=mDistantLandDistance)
+                {
+                    CellStoreCollection::iterator iter = mActiveCells.begin();
+
+                    while (iter!=mActiveCells.end())
+                    {
+                        assert ((*iter)->getCell()->isExterior());
+
+                        if ((*dist)->getCell()->getGridX()==(*iter)->getCell()->getGridX() &&
+                            (*dist)->getCell()->getGridY()==(*iter)->getCell()->getGridY())
+                            break;
+
+                        ++iter;
+                    }
+
+                    if (iter == mActiveCells.end())
+                    {
+                        // do not keep cells which are actually loaded now
+                        ++dist;
+                        continue;
+                    }
+                }
+            }
+
+            unloadDistantCell (dist++);
         }
 
         std::sort(distantCellsPositionsToLoad.begin(), distantCellsPositionsToLoad.end(),
