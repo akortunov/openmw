@@ -208,11 +208,12 @@ namespace
     {
         MWWorld::CellStore& mCell;
         Loading::Listener& mLoadingListener;
+        bool mDistant;
         bool mTest;
 
         std::vector<MWWorld::Ptr> mToInsert;
 
-        InsertVisitor (MWWorld::CellStore& cell, Loading::Listener& loadingListener, bool test);
+        InsertVisitor (MWWorld::CellStore& cell, Loading::Listener& loadingListener, bool test, bool distant=false);
 
         bool operator() (const MWWorld::Ptr& ptr);
 
@@ -220,8 +221,8 @@ namespace
         void insert(AddObject&& addObject);
     };
 
-    InsertVisitor::InsertVisitor (MWWorld::CellStore& cell, Loading::Listener& loadingListener, bool test)
-    : mCell (cell), mLoadingListener (loadingListener), mTest(test)
+    InsertVisitor::InsertVisitor (MWWorld::CellStore& cell, Loading::Listener& loadingListener, bool test, bool distant)
+    : mCell (cell), mLoadingListener (loadingListener), mDistant(distant), mTest(test)
     {}
 
     bool InsertVisitor::operator() (const MWWorld::Ptr& ptr)
@@ -237,6 +238,14 @@ namespace
     {
         for (MWWorld::Ptr& ptr : mToInsert)
         {
+            if (mDistant)
+            {
+                if (ptr.getTypeName() != typeid(ESM::Static).name() &&
+                    ptr.getTypeName() != typeid(ESM::Activator).name() &&
+                    ptr.getTypeName() != typeid(ESM::Door).name())
+                continue;
+            }
+
             if (!ptr.getRefData().isDeleted() && ptr.getRefData().isEnabled())
             {
                 try
@@ -379,6 +388,12 @@ namespace MWWorld
         mActiveCells.erase(*iter);
     }
 
+    void Scene::unloadDistantCell (CellStoreCollection::iterator iter)
+    {
+        mRendering.removeDistantCell(*iter);
+        mDistantCells.erase(*iter);
+    }
+
     void Scene::loadCell (CellStore *cell, Loading::Listener* loadingListener, bool respawn, bool test)
     {
         std::pair<CellStoreCollection::iterator, bool> result = mActiveCells.insert(cell);
@@ -427,8 +442,9 @@ namespace MWWorld
                 cell->respawn();
 
             // ... then references. This is important for adjustPosition to work correctly.
-            insertCell (*cell, loadingListener, test);
+            insertCell (*cell, loadingListener, test, false);
 
+            mRendering.removeDistantCell(cell);
             mRendering.addCell(cell);
             if (!test)
             {
@@ -470,12 +486,42 @@ namespace MWWorld
         mPreloader->notifyLoaded(cell);
     }
 
+    void Scene::loadDistantCell (CellStore *cell, Loading::Listener* loadingListener, bool respawn)
+    {
+        std::pair<CellStoreCollection::iterator, bool> result = mDistantCells.insert(cell);
+
+        if(result.second)
+        {
+            if (respawn)
+                cell->respawn();
+
+            insertCell (*cell, loadingListener, true, true);
+
+            mRendering.addDistantCell(cell);
+            bool waterEnabled = cell->getCell()->hasWater() || cell->isExterior();
+            float waterLevel = cell->getWaterLevel();
+            mRendering.setWaterEnabled(waterEnabled);
+            if (waterEnabled)
+            {
+                mPhysics->enableWater(waterLevel);
+                mRendering.setWaterHeight(waterLevel);
+            }
+            else
+                mPhysics->disableWater();
+        }
+
+        mPreloader->notifyLoaded(cell);
+    }
+
     void Scene::clear()
     {
         CellStoreCollection::iterator active = mActiveCells.begin();
         while (active!=mActiveCells.end())
             unloadCell (active++);
-        assert(mActiveCells.empty());
+        CellStoreCollection::iterator dist = mDistantCells.begin();
+        while (dist!=mDistantCells.end())
+            unloadDistantCell (dist++);
+        assert(mDistantCells.empty());
         mCurrentCell = nullptr;
 
         mPreloader->clear();
@@ -530,8 +576,27 @@ namespace MWWorld
             unloadCell (active++);
         }
 
+        CellStoreCollection::iterator dist = mDistantCells.begin();
+        while (dist!=mDistantCells.end())
+        {
+            /*
+            if ((*dist)->getCell()->isExterior())
+            {
+                if (std::abs (playerCellX-(*dist)->getCell()->getGridX())<=mHalfGridSize &&
+                    std::abs (playerCellY-(*dist)->getCell()->getGridY())<=mHalfGridSize)
+                {
+                    // keep cells within the new grid
+                    ++dist;
+                    continue;
+                }
+            }
+            */
+            unloadDistantCell (dist++);
+        }
+
         std::size_t refsToLoad = 0;
         std::vector<std::pair<int, int>> cellsPositionsToLoad;
+        std::vector<std::pair<int, int>> distantCellsPositionsToLoad;
         // get the number of refs to load
         for (int x = playerCellX - mHalfGridSize; x <= playerCellX + mHalfGridSize; ++x)
         {
@@ -599,6 +664,71 @@ namespace MWWorld
                 CellStore *cell = MWBase::Environment::get().getWorld()->getExterior(x, y);
 
                 loadCell (cell, loadingListener, changeEvent);
+            }
+        }
+
+        std::sort(distantCellsPositionsToLoad.begin(), distantCellsPositionsToLoad.end(),
+            [&] (const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {
+                return getCellPositionPriority(lhs) < getCellPositionPriority(rhs);
+            });
+
+        for (int x = playerCellX - mDistantLandDistance; x <= playerCellX + mDistantLandDistance; ++x)
+        {
+            for (int y = playerCellY - mDistantLandDistance; y <= playerCellY + mDistantLandDistance; ++y)
+            {
+                CellStoreCollection::iterator iter = mDistantCells.begin();
+
+                while (iter!=mDistantCells.end())
+                {
+                    assert ((*iter)->getCell()->isExterior());
+
+                    if (x==(*iter)->getCell()->getGridX() &&
+                        y==(*iter)->getCell()->getGridY())
+                        break;
+
+                    ++iter;
+                }
+
+                CellStoreCollection::iterator iter2 = mActiveCells.begin();
+
+                while (iter2!=mActiveCells.end())
+                {
+                    assert ((*iter2)->getCell()->isExterior());
+
+                    if (x==(*iter2)->getCell()->getGridX() &&
+                        y==(*iter2)->getCell()->getGridY())
+                        break;
+
+                    ++iter2;
+                }
+
+                distantCellsPositionsToLoad.push_back(std::make_pair(x, y));
+            }
+        }
+
+        for (const auto& cellPosition : distantCellsPositionsToLoad)
+        {
+            const auto x = cellPosition.first;
+            const auto y = cellPosition.second;
+
+            CellStoreCollection::iterator iter = mDistantCells.begin();
+
+            while (iter != mDistantCells.end())
+            {
+                assert ((*iter)->getCell()->isExterior());
+
+                if (x == (*iter)->getCell()->getGridX() &&
+                    y == (*iter)->getCell()->getGridY())
+                    break;
+
+                ++iter;
+            }
+
+            if (iter == mDistantCells.end())
+            {
+                CellStore *cell = MWBase::Environment::get().getWorld()->getExterior(x, y);
+
+                loadDistantCell (cell, loadingListener, changeEvent);
             }
         }
 
@@ -745,7 +875,8 @@ namespace MWWorld
                   DetourNavigator::Navigator& navigator)
     : mCurrentCell (0), mCellChanged (false), mPhysics(physics), mRendering(rendering), mNavigator(navigator)
     , mPreloadTimer(0.f)
-    , mHalfGridSize(Settings::Manager::getInt("exterior cell load distance", "Cells"))
+    , mDistantLandDistance(Settings::Manager::getInt("exterior cell load distance", "Cells"))
+    , mHalfGridSize(1)
     , mCellLoadingThreshold(1024.f)
     , mPreloadDistance(Settings::Manager::getInt("preload distance", "Cells"))
     , mPreloadEnabled(Settings::Manager::getBool("preload enabled", "Cells"))
@@ -818,6 +949,10 @@ namespace MWWorld
         while (active!=mActiveCells.end())
             unloadCell (active++);
 
+        CellStoreCollection::iterator dist = mDistantCells.begin();
+        while (dist!=mDistantCells.end())
+            unloadDistantCell (dist++);
+
         loadingListener->setProgressRange(cell->count());
 
         // Load cell.
@@ -869,9 +1004,9 @@ namespace MWWorld
         mCellChanged = false;
     }
 
-    void Scene::insertCell (CellStore &cell, Loading::Listener* loadingListener, bool test)
+    void Scene::insertCell (CellStore &cell, Loading::Listener* loadingListener, bool test, bool distant)
     {
-        InsertVisitor insertVisitor (cell, *loadingListener, test);
+        InsertVisitor insertVisitor (cell, *loadingListener, test, distant);
         cell.forEach (insertVisitor);
         insertVisitor.insert([&] (const MWWorld::Ptr& ptr) { addObject(ptr, *mPhysics, mRendering); });
         insertVisitor.insert([&] (const MWWorld::Ptr& ptr) { addObject(ptr, *mPhysics, mNavigator); });

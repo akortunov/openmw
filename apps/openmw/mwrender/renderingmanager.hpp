@@ -128,7 +128,9 @@ namespace MWRender
         void configureFog(float fogDepth, float underwaterFog, float dlFactor, float dlOffset, const osg::Vec4f& colour);
 
         void addCell(const MWWorld::CellStore* store);
+        void addDistantCell(const MWWorld::CellStore* store);
         void removeCell(const MWWorld::CellStore* store);
+        void removeDistantCell(const MWWorld::CellStore* store);
 
         void enableTerrain(bool enable);
 

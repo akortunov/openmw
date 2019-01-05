@@ -60,6 +60,7 @@ class Objects{
 
     typedef std::map<const MWWorld::CellStore*, osg::ref_ptr<osg::Group> > CellMap;
     CellMap mCellSceneNodes;
+    CellMap mDistantCellNodes;
     PtrAnimationMap mObjects;
 
     osg::ref_ptr<osg::Group> mRootNode;
@@ -78,6 +79,8 @@ public:
     /// @param allowLight If false, no lights will be created, and particles systems will be removed.
     void insertModel(const MWWorld::Ptr& ptr, const std::string &model, bool animated=false, bool allowLight=true);
 
+    void insertDistantModel(const MWWorld::Ptr& ptr);
+
     void insertNPC(const MWWorld::Ptr& ptr);
     void insertCreature (const MWWorld::Ptr& ptr, const std::string& model, bool weaponsShields);
 
@@ -87,6 +90,7 @@ public:
     bool removeObject (const MWWorld::Ptr& ptr);
     ///< \return found?
 
+    void removeDistantCell(const MWWorld::CellStore* store);
     void removeCell(const MWWorld::CellStore* store);
 
     /// Updates containing cell for object rendering data

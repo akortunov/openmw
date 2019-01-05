@@ -31,6 +31,10 @@ Objects::~Objects()
     for (CellMap::iterator iter = mCellSceneNodes.begin(); iter != mCellSceneNodes.end(); ++iter)
         iter->second->getParent(0)->removeChild(iter->second);
     mCellSceneNodes.clear();
+
+    for (CellMap::iterator iter = mDistantCellNodes.begin(); iter != mDistantCellNodes.end(); ++iter)
+        iter->second->getParent(0)->removeChild(iter->second);
+    mDistantCellNodes.clear();
 }
 
 void Objects::insertBegin(const MWWorld::Ptr& ptr)
@@ -65,6 +69,36 @@ void Objects::insertBegin(const MWWorld::Ptr& ptr)
     insert->setScale(scaleVec);
 
     ptr.getRefData().setBaseNode(insert);
+}
+
+void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
+{
+    osg::ref_ptr<osg::Group> cellnode;
+
+    CellMap::iterator found = mDistantCellNodes.find(ptr.getCell());
+    if (found == mDistantCellNodes.end())
+    {
+        cellnode = new osg::Group;
+        cellnode->setName("Distant Cell Root");
+        mRootNode->addChild(cellnode);
+        mDistantCellNodes[ptr.getCell()] = cellnode;
+    }
+    else
+        cellnode = found->second;
+
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> insert (new SceneUtil::PositionAttitudeTransform);
+    cellnode->addChild(insert);
+
+    //insert->getOrCreateUserDataContainer()->addUserObject(new PtrHolder(ptr));
+
+    const float *f = ptr.getRefData().getPosition().pos;
+
+    insert->setPosition(osg::Vec3(f[0], f[1], f[2]));
+
+    const float scale = ptr.getCellRef().getScale();
+    osg::Vec3f scaleVec(scale, scale, scale);
+    ptr.getClass().adjustScale(ptr, scaleVec, true);
+    insert->setScale(scaleVec);
 }
 
 void Objects::insertModel(const MWWorld::Ptr &ptr, const std::string &mesh, bool animated, bool allowLight)
@@ -168,6 +202,18 @@ void Objects::removeCell(const MWWorld::CellStore* store)
         if (mUnrefQueue.get())
             mUnrefQueue->push(cell->second);
         mCellSceneNodes.erase(cell);
+    }
+}
+
+void Objects::removeDistantCell(const MWWorld::CellStore* store)
+{
+    CellMap::iterator cell = mDistantCellNodes.find(store);
+    if(cell != mDistantCellNodes.end())
+    {
+        cell->second->getParent(0)->removeChild(cell->second);
+        if (mUnrefQueue.get())
+            mUnrefQueue->push(cell->second);
+        mDistantCellNodes.erase(cell);
     }
 }
 
