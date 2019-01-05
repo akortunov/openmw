@@ -119,6 +119,19 @@ namespace
         MWBase::Environment::get().getWorld()->applyLoopingParticles(ptr);
     }
 
+    void addDistantObject(const MWWorld::Ptr& ptr, MWPhysics::PhysicsSystem& physics,
+                   MWRender::RenderingManager& rendering)
+    {
+        if (ptr.getRefData().getBaseNode() || physics.getActor(ptr))
+        {
+            Log(Debug::Warning) << "Warning: Tried to add " << ptr.getCellRef().getRefId() << " to the scene twice";
+            return;
+        }
+
+        // TODO: set node rotation
+        rendering.getObjects().insertDistantModel(ptr);
+    }
+
     void addObject(const MWWorld::Ptr& ptr, const MWPhysics::PhysicsSystem& physics, DetourNavigator::Navigator& navigator)
     {
         if (const auto object = physics.getObject(ptr))
@@ -250,7 +263,7 @@ namespace
             {
                 try
                 {
-                    addObject(ptr);
+                    addObject(ptr, mDistant);
                 }
                 catch (const std::exception& e)
                 {
@@ -1017,8 +1030,18 @@ namespace MWWorld
     {
         InsertVisitor insertVisitor (cell, *loadingListener, test, distant);
         cell.forEach (insertVisitor);
-        insertVisitor.insert([&] (const MWWorld::Ptr& ptr) { addObject(ptr, *mPhysics, mRendering); });
-        insertVisitor.insert([&] (const MWWorld::Ptr& ptr) { addObject(ptr, *mPhysics, mNavigator); });
+        insertVisitor.insert([&] (const MWWorld::Ptr& ptr, bool distant)
+        {
+            if (distant)
+                addDistantObject(ptr, *mPhysics, mRendering);
+            else
+                addObject(ptr, *mPhysics, mRendering);
+        });
+        insertVisitor.insert([&] (const MWWorld::Ptr& ptr, bool distant)
+        {
+            if (!distant)
+                addObject(ptr, *mPhysics, mNavigator);
+        });
 
         // do adjustPosition (snapping actors to ground) after objects are loaded, so we don't depend on the loading order
         PositionVisitor posVisitor;

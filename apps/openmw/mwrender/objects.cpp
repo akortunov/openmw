@@ -3,6 +3,8 @@
 #include <osg/Group>
 #include <osg/UserDataContainer>
 
+#include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
 #include <components/sceneutil/vismask.hpp>
@@ -71,8 +73,23 @@ void Objects::insertBegin(const MWWorld::Ptr& ptr)
     ptr.getRefData().setBaseNode(insert);
 }
 
+osg::Quat makeObjectOsgQuat(const ESM::Position& position)
+{
+    const float xr = position.rot[0];
+    const float yr = position.rot[1];
+    const float zr = position.rot[2];
+
+    return osg::Quat(zr, osg::Vec3(0, 0, -1))
+        * osg::Quat(yr, osg::Vec3(0, -1, 0))
+        * osg::Quat(xr, osg::Vec3(-1, 0, 0));
+}
+
 void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
 {
+    const std::string model = ptr.getClass().getModel(ptr);
+    if (model.empty())
+        return;
+
     osg::ref_ptr<osg::Group> cellnode;
 
     CellMap::iterator found = mDistantCellNodes.find(ptr.getCell());
@@ -89,8 +106,6 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     osg::ref_ptr<SceneUtil::PositionAttitudeTransform> insert (new SceneUtil::PositionAttitudeTransform);
     cellnode->addChild(insert);
 
-    //insert->getOrCreateUserDataContainer()->addUserObject(new PtrHolder(ptr));
-
     const float *f = ptr.getRefData().getPosition().pos;
 
     insert->setPosition(osg::Vec3(f[0], f[1], f[2]));
@@ -99,6 +114,10 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     osg::Vec3f scaleVec(scale, scale, scale);
     ptr.getClass().adjustScale(ptr, scaleVec, true);
     insert->setScale(scaleVec);
+
+    mResourceSystem->getSceneManager()->getInstance(model, insert);
+
+    insert->setAttitude(makeObjectOsgQuat(ptr.getRefData().getPosition()));
 }
 
 void Objects::insertModel(const MWWorld::Ptr &ptr, const std::string &mesh, bool animated, bool allowLight)
