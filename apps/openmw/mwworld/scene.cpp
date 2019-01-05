@@ -390,6 +390,7 @@ namespace MWWorld
 
     void Scene::unloadDistantCell (CellStoreCollection::iterator iter)
     {
+        Log(Debug::Info) << "Unloading distant cell " << (*iter)->getCell()->getDescription();
         mRendering.removeDistantCell(*iter);
         mDistantCells.erase(*iter);
     }
@@ -492,6 +493,8 @@ namespace MWWorld
 
         if(result.second)
         {
+            Log(Debug::Info) << "Loading distant cell " << cell->getCell()->getDescription();
+
             if (respawn)
                 cell->respawn();
 
@@ -689,6 +692,9 @@ namespace MWWorld
                     ++iter;
                 }
 
+                if (iter != mDistantCells.end())
+                    continue;
+
                 CellStoreCollection::iterator iter2 = mActiveCells.begin();
 
                 while (iter2!=mActiveCells.end())
@@ -701,6 +707,9 @@ namespace MWWorld
 
                     ++iter2;
                 }
+
+                if (iter2 != mActiveCells.end())
+                    continue;
 
                 distantCellsPositionsToLoad.push_back(std::make_pair(x, y));
             }
