@@ -69,6 +69,8 @@ class Objects{
 
     osg::ref_ptr<SceneUtil::UnrefQueue> mUnrefQueue;
 
+    float mDistantCullingSize;
+
     void insertBegin(const MWWorld::Ptr& ptr);
 
 public:

@@ -2,12 +2,14 @@
 
 #include <osg/Group>
 #include <osg/UserDataContainer>
+#include <osgUtil/CullVisitor>
 
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
 #include <components/sceneutil/vismask.hpp>
+#include <components/settings/settings.hpp>
 
 #include "../mwworld/ptr.hpp"
 #include "../mwworld/class.hpp"
@@ -23,7 +25,12 @@ Objects::Objects(Resource::ResourceSystem* resourceSystem, osg::ref_ptr<osg::Gro
     : mRootNode(rootNode)
     , mResourceSystem(resourceSystem)
     , mUnrefQueue(unrefQueue)
+    , mDistantCullingSize(-1.f)
 {
+    if (Settings::Manager::getBool("small feature culling", "Camera"))
+    {
+        mDistantCullingSize = Settings::Manager::getFloat("distant small feature culling pixel size", "Camera");
+    }
 }
 
 Objects::~Objects()
@@ -84,6 +91,30 @@ osg::Quat makeObjectOsgQuat(const ESM::Position& position)
         * osg::Quat(xr, osg::Vec3(-1, 0, 0));
 }
 
+class SetSmallFeatureCulling : public osg::NodeCallback
+{
+    float _value;
+
+    void operator()(osg::Node* node, osg::NodeVisitor* nv)
+    {
+        osgUtil::CullVisitor *cv = static_cast<osgUtil::CullVisitor*>(nv);
+        osg::CullStack::CullingStack &projCullStack = cv->getProjectionCullingStack();
+        if(!projCullStack.empty())
+        {
+            osg::CullingSet& cullingSet = projCullStack.back();
+            float currentValue = cullingSet.getSmallFeatureCullingPixelSize();
+            cullingSet.setSmallFeatureCullingPixelSize(_value);
+            traverse(node, nv);
+            cullingSet.setSmallFeatureCullingPixelSize(currentValue);
+        }
+        else
+            traverse(node, nv);
+    }
+
+public:
+    SetSmallFeatureCulling(float value) : _value(value) { }
+};
+
 void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
 {
     const std::string model = ptr.getClass().getModel(ptr);
@@ -100,6 +131,13 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
         cellnode = new osg::Group;
         cellnode->setName("Distant Cell Root");
         cellnode->setNodeMask(1<<30);
+
+        if (mDistantCullingSize > 0)
+        {
+            auto callback = new SetSmallFeatureCulling(mDistantCullingSize);
+            cellnode->setCullCallback(callback);
+        }
+
         mRootNode->addChild(cellnode);
         mDistantCellNodes[ptr.getCell()] = cellnode;
     }
