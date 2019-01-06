@@ -95,8 +95,11 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     CellMap::iterator found = mDistantCellNodes.find(ptr.getCell());
     if (found == mDistantCellNodes.end())
     {
+        // HACK: set custom mask to do not reflect distant stuff.
+        // A custom reflection distance probably would be a better solution
         cellnode = new osg::Group;
         cellnode->setName("Distant Cell Root");
+        cellnode->setNodeMask(1<<30);
         mRootNode->addChild(cellnode);
         mDistantCellNodes[ptr.getCell()] = cellnode;
     }
