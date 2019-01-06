@@ -258,6 +258,7 @@ namespace
             {
                 if (ptr.getTypeName() != typeid(ESM::Static).name() &&
                     ptr.getTypeName() != typeid(ESM::Activator).name() &&
+                    ptr.getTypeName() != typeid(ESM::Container).name() &&
                     ptr.getTypeName() != typeid(ESM::Door).name())
                 continue;
             }
