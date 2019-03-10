@@ -25,12 +25,8 @@ Objects::Objects(Resource::ResourceSystem* resourceSystem, osg::ref_ptr<osg::Gro
     : mRootNode(rootNode)
     , mResourceSystem(resourceSystem)
     , mUnrefQueue(unrefQueue)
-    , mDistantCullingSize(-1.f)
+    , mDistantCullingSize(Settings::Manager::getFloat("minimum static size", "Terrain"))
 {
-    if (Settings::Manager::getBool("small feature culling", "Camera"))
-    {
-        mDistantCullingSize = Settings::Manager::getFloat("distant small feature culling pixel size", "Camera");
-    }
 }
 
 Objects::~Objects()
@@ -91,34 +87,15 @@ osg::Quat makeObjectOsgQuat(const ESM::Position& position)
         * osg::Quat(xr, osg::Vec3(-1, 0, 0));
 }
 
-class SetSmallFeatureCulling : public osg::NodeCallback
-{
-    float _value;
-
-    void operator()(osg::Node* node, osg::NodeVisitor* nv)
-    {
-        osgUtil::CullVisitor *cv = static_cast<osgUtil::CullVisitor*>(nv);
-        osg::CullStack::CullingStack &projCullStack = cv->getProjectionCullingStack();
-        if(!projCullStack.empty())
-        {
-            osg::CullingSet& cullingSet = projCullStack.back();
-            float currentValue = cullingSet.getSmallFeatureCullingPixelSize();
-            cullingSet.setSmallFeatureCullingPixelSize(_value);
-            traverse(node, nv);
-            cullingSet.setSmallFeatureCullingPixelSize(currentValue);
-        }
-        else
-            traverse(node, nv);
-    }
-
-public:
-    SetSmallFeatureCulling(float value) : _value(value) { }
-};
-
 void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
 {
     const std::string model = ptr.getClass().getModel(ptr);
     if (model.empty())
+        return;
+
+    osg::ref_ptr<const osg::Node> templ = mResourceSystem->getSceneManager()->getTemplate(model);
+    const osg::BoundingSphere& bs = templ->getBound();
+    if (bs.radius2() * 4 < mDistantCullingSize * mDistantCullingSize)
         return;
 
     osg::ref_ptr<osg::Group> cellnode;
@@ -132,12 +109,6 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
         cellnode->setName("Distant Cell Root");
         cellnode->setNodeMask(1<<30);
 
-        if (mDistantCullingSize > 0)
-        {
-            auto callback = new SetSmallFeatureCulling(mDistantCullingSize);
-            cellnode->setCullCallback(callback);
-        }
-
         mRootNode->addChild(cellnode);
         mDistantCellNodes[ptr.getCell()] = cellnode;
     }
@@ -145,7 +116,6 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
         cellnode = found->second;
 
     osg::ref_ptr<SceneUtil::PositionAttitudeTransform> insert (new SceneUtil::PositionAttitudeTransform);
-    cellnode->addChild(insert);
 
     const float *f = ptr.getRefData().getPosition().pos;
 
@@ -155,6 +125,8 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     osg::Vec3f scaleVec(scale, scale, scale);
     ptr.getClass().adjustScale(ptr, scaleVec, true);
     insert->setScale(scaleVec);
+
+    cellnode->addChild(insert);
 
     mResourceSystem->getSceneManager()->getInstance(model, insert);
 
