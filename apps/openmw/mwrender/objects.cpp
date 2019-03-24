@@ -4,6 +4,7 @@
 #include <osg/UserDataContainer>
 #include <osgUtil/CullVisitor>
 
+#include <components/misc/resourcehelpers.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
@@ -89,9 +90,11 @@ osg::Quat makeObjectOsgQuat(const ESM::Position& position)
 
 void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
 {
-    const std::string model = ptr.getClass().getModel(ptr);
+    std::string model = ptr.getClass().getModel(ptr);
     if (model.empty())
         return;
+
+    model = Misc::ResourceHelpers::correctDistantModelPath(model, mResourceSystem->getVFS());
 
     const osg::Node* templ = mResourceSystem->getSceneManager()->getTemplate(model);
     const osg::BoundingSphere& bs = templ->getBound();

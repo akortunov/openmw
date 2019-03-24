@@ -124,6 +124,17 @@ std::string Misc::ResourceHelpers::correctBookartPath(const std::string &resPath
     return image;
 }
 
+std::string Misc::ResourceHelpers::correctDistantModelPath(const std::string &resPath, const VFS::Manager* vfs)
+{
+    std::string mdlname = resPath;
+    mdlname = mdlname.replace(mdlname.size()-4, 4, "_dist.nif");
+    if(!vfs->exists(mdlname))
+    {
+        return resPath;
+    }
+    return mdlname;
+}
+
 std::string Misc::ResourceHelpers::correctActorModelPath(const std::string &resPath, const VFS::Manager* vfs)
 {
     std::string mdlname = resPath;
