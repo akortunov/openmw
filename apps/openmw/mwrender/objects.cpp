@@ -93,7 +93,7 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     if (model.empty())
         return;
 
-    osg::ref_ptr<const osg::Node> templ = mResourceSystem->getSceneManager()->getTemplate(model);
+    const osg::Node* templ = mResourceSystem->getSceneManager()->getTemplate(model);
     const osg::BoundingSphere& bs = templ->getBound();
     if (bs.radius2() * 4 < mDistantCullingSize * mDistantCullingSize)
         return;
@@ -127,8 +127,7 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
     insert->setScale(scaleVec);
 
     cellnode->addChild(insert);
-
-    mResourceSystem->getSceneManager()->getInstance(model, insert);
+    insert->addChild(const_cast<osg::Node*>(templ));
 
     insert->setAttitude(makeObjectOsgQuat(ptr.getRefData().getPosition()));
 }
