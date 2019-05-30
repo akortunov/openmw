@@ -612,6 +612,10 @@ add_subdirectory (extern/oics)
 if (BUILD_OPENCS)
     add_subdirectory (extern/osgQt)
 endif()
+option(BUILD_WITH_LUA "Enable Lua language" ON)
+if (BUILD_WITH_LUA)
+    add_subdirectory (extern/LuaBridge)
+endif()
 
 # Components
 add_subdirectory (components)

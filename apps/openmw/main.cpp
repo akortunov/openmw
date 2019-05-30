@@ -6,6 +6,8 @@
 #include <components/debug/debugging.hpp>
 #include <components/misc/rng.hpp>
 
+#include "Script/Script.hpp"
+
 #include "engine.hpp"
 
 #if defined(_WIN32)
@@ -253,6 +255,23 @@ int runApplication(int argc, char *argv[])
     Files::ConfigurationManager cfgMgr;
     std::unique_ptr<OMW::Engine> engine;
     engine.reset(new OMW::Engine(cfgMgr));
+
+    std::vector<std::string> plugins = { "helloWorld.lua"};
+
+    std::string pluginHome = ".";
+#ifdef ENABLE_LUA
+    LangLua::AddPackagePath(Utils::convertPath(pluginHome + "/scripts/?.lua" + ";"
+        + pluginHome + "/lib/lua/?.lua" + ";"));
+#ifdef _WIN32
+    LangLua::AddPackageCPath(Utils::convertPath(pluginHome + "/lib/?.dll"));
+#else
+    LangLua::AddPackageCPath(Utils::convertPath(pluginHome + "/lib/?.so"));
+#endif
+
+#endif
+
+    for (auto plugin : plugins)
+        Script::LoadScript(plugin.c_str(), pluginHome.c_str());
 
     if (parseOptions(argc, argv, *engine, cfgMgr))
     {

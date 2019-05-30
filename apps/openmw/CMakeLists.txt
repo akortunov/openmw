@@ -97,25 +97,96 @@ add_openmw_dir (mwbase
 
 # Main executable
 
-if (NOT ANDROID)
-    openmw_add_executable(openmw
-        ${OPENMW_FILES}
-        ${GAME} ${GAME_HEADER}
-        ${APPLE_BUNDLE_RESOURCES}
+if(BUILD_WITH_LUA)
+
+    find_package(LuaJit REQUIRED)
+
+    MESSAGE(STATUS "Found LuaJit_LIBRARIES: ${LuaJit_LIBRARIES}")
+    MESSAGE(STATUS "Found LuaJit_INCLUDE_DIRS: ${LuaJit_INCLUDE_DIRS}")
+
+    set(LuaScript_Sources
+            Script/LangLua/LangLua.cpp
+            Script/LangLua/LuaFunc.cpp)
+    set(LuaScript_Headers ${LUA_INCLUDE_DIR}
+            Script/LangLua/LangLua.hpp)
+
+    set(LUA
+        Script/Utils.cpp
+        Script/Utils2.cpp
+        Script/Script.cpp Script/ScriptFunction.cpp
+        Script/ScriptFunctions.cpp
+
+        #Script/Functions/Actors.cpp Script/Functions/Objects.cpp Script/Functions/Miscellaneous.cpp
+        #Script/Functions/Worldstate.cpp
+
+        #Script/Functions/Books.cpp Script/Functions/Cells.cpp Script/Functions/CharClass.cpp
+        #Script/Functions/Chat.cpp Script/Functions/Dialogue.cpp Script/Functions/Factions.cpp
+        #Script/Functions/GUI.cpp Script/Functions/Items.cpp Script/Functions/Mechanics.cpp
+        #Script/Functions/Positions.cpp Script/Functions/Quests.cpp Script/Functions/RecordsDynamic.cpp
+        #Script/Functions/Server.cpp Script/Functions/Settings.cpp Script/Functions/Shapeshift.cpp
+        #Script/Functions/Spells.cpp Script/Functions/Stats.cpp Script/Functions/Timer.cpp
+
+        Script/API/PublicFnAPI.cpp
+        #Script/API/TimerAPI.cpp
+            ${LuaScript_Sources}
     )
+
+    set(LUA_HEADER
+        Script/Types.hpp Script/Script.hpp Script/SystemInterface.hpp Script/Utils.hpp Script/Utils2.hpp
+        Script/ScriptFunction.hpp Script/Platform.hpp Script/Language.hpp
+        Script/ScriptFunctions.hpp  Script/API/PublicFnAPI.hpp #Script/API/TimerAPI.hpp
+        ${LuaScript_Headers}
+    )
+
+    source_group(game FILES ${LUA} ${LUA_HEADER})
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_LUA")
+    include_directories(SYSTEM ${LuaJit_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/extern/LuaBridge)
+
+    if (NOT ANDROID)
+        openmw_add_executable(openmw
+            ${OPENMW_FILES}
+            ${LUA} ${LUA_HEADER}
+            ${GAME} ${GAME_HEADER}
+            ${APPLE_BUNDLE_RESOURCES}
+    )
+    else ()
+        add_library(openmw
+            SHARED
+            ${LUA} ${LUA_HEADER}
+            ${OPENMW_FILES}
+            ${GAME} ${GAME_HEADER}
+        )
+    endif ()
+
+    target_link_libraries(openmw  ${LuaJit_LIBRARIES} "LuaBridge")
+
 else ()
-    add_library(openmw
-        SHARED
-        ${OPENMW_FILES}
-        ${GAME} ${GAME_HEADER}
-    )
-endif ()
+    if (NOT ANDROID)
+        openmw_add_executable(openmw
+            ${OPENMW_FILES}
+            ${GAME} ${GAME_HEADER}
+            ${APPLE_BUNDLE_RESOURCES}
+        )
+    else ()
+        add_library(openmw
+            SHARED
+            ${OPENMW_FILES}
+            ${GAME} ${GAME_HEADER}
+        )
+    endif ()
+endif(BUILD_WITH_LUA)
 
 # Sound stuff - here so CMake doesn't stupidly recompile EVERYTHING
 # when we change the backend.
 include_directories(
     ${FFmpeg_INCLUDE_DIRS}
 )
+
+#find_package(RakNet REQUIRED)
+#include_directories(${RakNet_INCLUDES})
+
+
 
 target_link_libraries(openmw
     ${OSG_LIBRARIES}
@@ -135,6 +206,7 @@ target_link_libraries(openmw
     ${MyGUI_LIBRARIES}
     ${SDL2_LIBRARY}
     ${RecastNavigation_LIBRARIES}
+    #${RakNet_LIBRARY}
     "osg-ffmpeg-videoplayer"
     "oics"
     components
