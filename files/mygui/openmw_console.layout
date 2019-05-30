@@ -17,10 +17,14 @@
     </Widget>
 
     <!-- Command line -->
-    <Widget type="EditBox" skin="MW_ConsoleCommand" position="0 338 384 28" align="HStretch Bottom" name="edit_Command">
-        <Property key="InvertSelected" value="false"/>
-        <UserString key="AcceptTab" value="true"/>
+    <Widget type="HBox" skin="" position="0 338 384 28" align="HStretch Bottom">
+        <Widget type="Button" skin="MW_Button" position="0 0 110 26" align="Left VCenter" name="LanguageButton">
+            <Property key="Caption" value="MWScript"/>
+        </Widget>
+        <Widget type="EditBox" skin="MW_ConsoleCommand" position="0 0 384 28" align="HStretch Bottom" name="edit_Command">
+            <Property key="InvertSelected" value="false"/>
+            <UserString key="AcceptTab" value="true"/>
+        </Widget>
     </Widget>
-
   </Widget>
 </MyGUI>

@@ -125,6 +125,23 @@ namespace MWGui
         }
     }
 
+    void Console::changeLanguage(MyGUI::Widget* _sender)
+    {
+        onOpen();
+        if (mLanguageButton->getCaption() == "Lua")
+            mLanguageButton->setCaption("MWScript");
+        else
+            mLanguageButton->setCaption("Lua");
+    }
+
+    Console::~Console()
+    {
+#ifdef ENABLE_LUA
+        lua_close(mLuaState);
+        mLuaState = nullptr;
+#endif
+    }
+
     Console::Console(int w, int h, bool consoleOnlyScripts)
       : WindowBase("openmw_console.layout"),
         mCompilerContext (MWScript::CompilerContext::Type_Console),
@@ -134,6 +151,15 @@ namespace MWGui
 
         getWidget(mCommandLine, "edit_Command");
         getWidget(mHistory, "list_History");
+        getWidget(mLanguageButton, "LanguageButton");
+
+#ifdef ENABLE_LUA
+        mLanguageButton->eventMouseButtonClick += newDelegate(this, &Console::changeLanguage);
+        mLuaState = luaL_newstate();
+        luaL_openlibs(mLuaState);
+#else
+        mLanguageButton->setVisible(false);
+#endif
 
         // Set up the command line box
         mCommandLine->eventEditSelectAccept +=
@@ -170,6 +196,47 @@ namespace MWGui
     void Console::printError(const std::string &msg)
     {
         print(msg + "\n", "#FF2222");
+    }
+    void Console::executeLua (const std::string& command)
+    {
+#ifdef ENABLE_LUA
+        // Log the command
+        print("> " + command + "\n");
+
+        int rv;
+        rv = luaL_loadbuffer(mLuaState, command.c_str(), command.size(), "console");
+        if (rv)
+        {
+            if (rv == LUA_ERRSYNTAX) {
+                printError("Error : Invalid syntax\n");
+            }
+            else if (rv == LUA_ERRMEM) {
+                printError("Error : Memory allocation error\n");
+            }
+            else {
+                printError("Error : unknown error...\n");
+            }
+
+            lua_close(mLuaState);
+            mLuaState = luaL_newstate();
+            luaL_openlibs(mLuaState);
+            return;
+        }
+
+        // call
+        rv = lua_pcall(mLuaState, 0, LUA_MULTRET, 0);
+        if (rv)
+        {
+            std::string err_str = lua_tostring(mLuaState, 1);
+            lua_pop(mLuaState, 1);
+            printError(err_str);
+
+            lua_close(mLuaState);
+            mLuaState = luaL_newstate();
+            luaL_openlibs(mLuaState);
+            return;
+        }
+#endif
     }
 
     void Console::execute (const std::string& command)
@@ -268,6 +335,10 @@ namespace MWGui
         }
         else if(key == MyGUI::KeyCode::Tab)
         {
+            // no autocomplete for Lua
+            if (mLanguageButton->getCaption() == "Lua")
+                return;
+
             std::vector<std::string> matches;
             listNames();
             std::string oldCaption = mCommandLine->getCaption();
@@ -337,7 +408,10 @@ namespace MWGui
         // during the actual command execution
         mCommandLine->setCaption("");
 
-        execute (cm);
+        if (mLanguageButton->getCaption() == "Lua")
+            executeLua(cm);
+        else
+            execute(cm);
     }
 
     std::string Console::complete( std::string input, std::vector<std::string> &matches )

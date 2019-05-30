@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+#include <MyGUI_Button.h>
+
+#include "../Script/LangLua/LangLua.hpp"
+
 #include <components/compiler/errorhandler.hpp>
 #include <components/compiler/lineparser.hpp>
 #include <components/compiler/scanner.hpp>
@@ -38,6 +42,7 @@ namespace MWGui
             std::string mEditString;
 
             Console(int w, int h, bool consoleOnlyScripts);
+            ~Console();
 
             virtual void onOpen();
 
@@ -55,6 +60,7 @@ namespace MWGui
             void printError(const std::string &msg);
 
             void execute (const std::string& command);
+            void executeLua (const std::string& command);
 
             void executeFile (const std::string& path);
 
@@ -94,6 +100,12 @@ namespace MWGui
             /// \note The list may contain duplicates (if a name is a keyword and an identifier at the same
             /// time).
             void listNames();
+
+            void changeLanguage(MyGUI::Widget* _sender);
+
+            lua_State *mLuaState;
+
+            MyGUI::Button* mLanguageButton;
   };
 }
 #endif
