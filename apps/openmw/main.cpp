@@ -268,10 +268,9 @@ int runApplication(int argc, char *argv[])
     LangLua::AddPackageCPath(Utils::convertPath(pluginHome + "/lib/?.so"));
 #endif
 
-#endif
-
     for (auto plugin : plugins)
         Script::LoadScript(plugin.c_str(), pluginHome.c_str());
+#endif
 
     if (parseOptions(argc, argv, *engine, cfgMgr))
     {

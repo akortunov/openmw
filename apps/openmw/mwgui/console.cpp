@@ -151,6 +151,7 @@ namespace MWGui
         mLanguageButton->eventMouseButtonClick += newDelegate(this, &Console::changeLanguage);
 #else
         mLanguageButton->setVisible(false);
+        mLanguageButton->setSize(0,0);
 #endif
 
         // Set up the command line box
@@ -191,6 +192,7 @@ namespace MWGui
     }
     void Console::executeLua (const std::string& command)
     {
+#ifdef ENABLE_LUA
         try
         {
             Script::ExecuteCommand(command.c_str());
@@ -199,6 +201,7 @@ namespace MWGui
         {
             printError (std::string ("Error: ") + error.what());
         }
+#endif
     }
 
     void Console::execute (const std::string& command)
