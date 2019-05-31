@@ -13,28 +13,37 @@ using namespace std;
 Script::ScriptList Script::scripts;
 std::string Script::moddir;
 
-Script::Script(const char *path)
+Script::Script(const char *path, bool command)
 {
 
 #if defined (ENABLE_LUA)
-    FILE *file = fopen(path, "rb");
 
-    if (!file)
-        throw runtime_error("Script not found: " + string(path));
+    if (!command)
+    {
+        FILE *file = fopen(path, "rb");
 
-    fclose(file);
+        if (!file)
+            throw runtime_error("Script not found: " + string(path));
 
-    if (strstr(path, ".lua") || strstr(path, ".t"))
+        fclose(file);
+
+        if (strstr(path, ".lua") || strstr(path, ".t"))
+        {
+            lang = new LangLua();
+            script_type = SCRIPT_LUA;
+        }
+        else
+            throw runtime_error("Script type not recognized: " + string(path));
+    }
+    else
     {
         lang = new LangLua();
         script_type = SCRIPT_LUA;
     }
-    else
-        throw runtime_error("Script type not recognized: " + string(path));
 
     try
     {
-        lang->LoadProgram(path);
+        command ? lang->LoadCommand(path) : lang->LoadProgram(path);
     }
     catch (...)
     {
@@ -43,7 +52,6 @@ Script::Script(const char *path)
     }
 #endif
 }
-
 
 Script::~Script()
 {
@@ -77,6 +85,11 @@ void Script::UnloadScripts()
 {
     //Public::DeleteAll();
     scripts.clear();
+}
+
+void Script::ExecuteCommand(const char *command)
+{
+    std::unique_ptr<Script> comm(new Script(command, true));
 }
 
 void Script::LoadScript(const char *script, const char *base)

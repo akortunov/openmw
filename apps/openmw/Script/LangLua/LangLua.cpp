@@ -168,6 +168,33 @@ LuaFuctionData *functions()
 }
 #endif
 
+void LangLua::LoadCommand(const char *command)
+{
+    int err = 0;
+
+    if ((err = luaL_loadbuffer(lua, command, strlen(command), "console")) != 0)
+        throw runtime_error("Lua error (" + to_string(err) + "): \"" +
+                            string(lua_tostring(lua, -1)) + "\"");
+
+    constexpr auto functions_n = sizeof(ScriptFunctions::functions) / sizeof(ScriptFunctions::functions[0]);
+
+#ifdef __arm__
+    LuaFuctionData *functions_ = functions(IndicesFor<functions_n>{});
+#else
+    LuaFuctionData *functions_ = functions<sizeof(ScriptFunctions::functions) / sizeof(ScriptFunctions::functions[0])>();
+#endif
+    luabridge::Namespace omw = luabridge::getGlobalNamespace(lua).beginNamespace("omw");
+
+    for (unsigned i = 0; i < functions_n; i++)
+        omw.addCFunction(functions_[i].name, functions_[i].func);
+
+    omw.endNamespace();
+
+    if ((err = lua_pcall(lua, 0, LUA_MULTRET, 0)) != 0) // Run once script for load in memory.
+        throw runtime_error("Lua error (" + to_string(err) + "): \"" +
+                            string(lua_tostring(lua, -1)) + "\"");
+}
+
 void LangLua::LoadProgram(const char *filename)
 {
     int err = 0;
@@ -183,12 +210,12 @@ void LangLua::LoadProgram(const char *filename)
 #else
     LuaFuctionData *functions_ = functions<sizeof(ScriptFunctions::functions) / sizeof(ScriptFunctions::functions[0])>();
 #endif
-    luabridge::Namespace tes3mp = luabridge::getGlobalNamespace(lua).beginNamespace("tes3mp");
+    luabridge::Namespace omw = luabridge::getGlobalNamespace(lua).beginNamespace("omw");
 
     for (unsigned i = 0; i < functions_n; i++)
-        tes3mp.addCFunction(functions_[i].name, functions_[i].func);
+        omw.addCFunction(functions_[i].name, functions_[i].func);
 
-    tes3mp.endNamespace();
+    omw.endNamespace();
 
     if ((err = lua_pcall(lua, 0, 0, 0)) != 0) // Run once script for load in memory.
         throw runtime_error("Lua script " + string(filename) + " error (" + to_string(err) + "): \"" +

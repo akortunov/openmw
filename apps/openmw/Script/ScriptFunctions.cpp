@@ -2,6 +2,10 @@
 #include "API/PublicFnAPI.hpp"
 #include <cstdarg>
 #include <iostream>
+
+#include "../mwbase/environment.hpp"
+#include "../mwbase/windowmanager.hpp"
+
 //#include <apps/openmw-mp/Player.hpp>
 ////#include <apps/openmw-mp/Networking.hpp>
 //#include <components/openmw-mp/NetworkMessages.hpp>
@@ -32,4 +36,21 @@ boost::any ScriptFunctions::CallPublic(const char *name, va_list args) noexcept
     catch (...) {}
 
     return 0;
+}
+
+std::vector<std::string> splitString(const std::string &str, char delim = ';')
+{
+    std::istringstream ss(str);
+    std::vector<std::string> result;
+    std::string token;
+    while (std::getline(ss, token, delim))
+        result.push_back(token);
+    return result;
+}
+
+void ScriptFunctions::MessageBox(const char *label, const char *buttons) noexcept
+{
+    std::vector<std::string> buttonLabels = splitString(buttons);
+
+    MWBase::Environment::get().getWindowManager()->interactiveMessageBox(label, buttonLabels);
 }

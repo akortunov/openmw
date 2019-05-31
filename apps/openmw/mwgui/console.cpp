@@ -1,5 +1,7 @@
 #include "console.hpp"
 
+#include "../Script/Script.hpp"
+
 #include <MyGUI_EditBox.h>
 #include <MyGUI_InputManager.h>
 #include <MyGUI_LayerManager.h>
@@ -134,14 +136,6 @@ namespace MWGui
             mLanguageButton->setCaption("Lua");
     }
 
-    Console::~Console()
-    {
-#ifdef ENABLE_LUA
-        lua_close(mLuaState);
-        mLuaState = nullptr;
-#endif
-    }
-
     Console::Console(int w, int h, bool consoleOnlyScripts)
       : WindowBase("openmw_console.layout"),
         mCompilerContext (MWScript::CompilerContext::Type_Console),
@@ -155,8 +149,6 @@ namespace MWGui
 
 #ifdef ENABLE_LUA
         mLanguageButton->eventMouseButtonClick += newDelegate(this, &Console::changeLanguage);
-        mLuaState = luaL_newstate();
-        luaL_openlibs(mLuaState);
 #else
         mLanguageButton->setVisible(false);
 #endif
@@ -199,44 +191,14 @@ namespace MWGui
     }
     void Console::executeLua (const std::string& command)
     {
-#ifdef ENABLE_LUA
-        // Log the command
-        print("> " + command + "\n");
-
-        int rv;
-        rv = luaL_loadbuffer(mLuaState, command.c_str(), command.size(), "console");
-        if (rv)
+        try
         {
-            if (rv == LUA_ERRSYNTAX) {
-                printError("Error : Invalid syntax\n");
-            }
-            else if (rv == LUA_ERRMEM) {
-                printError("Error : Memory allocation error\n");
-            }
-            else {
-                printError("Error : unknown error...\n");
-            }
-
-            lua_close(mLuaState);
-            mLuaState = luaL_newstate();
-            luaL_openlibs(mLuaState);
-            return;
+            Script::ExecuteCommand(command.c_str());
         }
-
-        // call
-        rv = lua_pcall(mLuaState, 0, LUA_MULTRET, 0);
-        if (rv)
+        catch (const std::exception& error)
         {
-            std::string err_str = lua_tostring(mLuaState, 1);
-            lua_pop(mLuaState, 1);
-            printError(err_str);
-
-            lua_close(mLuaState);
-            mLuaState = luaL_newstate();
-            luaL_openlibs(mLuaState);
-            return;
+            printError (std::string ("Error: ") + error.what());
         }
-#endif
     }
 
     void Console::execute (const std::string& command)

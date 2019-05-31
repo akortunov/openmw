@@ -7,8 +7,6 @@
 
 #include <MyGUI_Button.h>
 
-#include "../Script/LangLua/LangLua.hpp"
-
 #include <components/compiler/errorhandler.hpp>
 #include <components/compiler/lineparser.hpp>
 #include <components/compiler/scanner.hpp>
@@ -42,7 +40,6 @@ namespace MWGui
             std::string mEditString;
 
             Console(int w, int h, bool consoleOnlyScripts);
-            ~Console();
 
             virtual void onOpen();
 
@@ -102,8 +99,6 @@ namespace MWGui
             void listNames();
 
             void changeLanguage(MyGUI::Widget* _sender);
-
-            lua_State *mLuaState;
 
             MyGUI::Button* mLanguageButton;
   };

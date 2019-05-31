@@ -49,7 +49,7 @@ private:
     typedef std::vector<std::unique_ptr<Script>> ScriptList;
     static ScriptList scripts;
 
-    Script(const char *path);
+    Script(const char *path, bool command = false);
 
     Script(const Script&) = delete;
     Script& operator=(const Script&) = delete;
@@ -59,6 +59,7 @@ protected:
 public:
     ~Script();
 
+    static void ExecuteCommand(const char *command);
     static void LoadScript(const char *script, const char* base);
     static void LoadScripts(char* scripts, const char* base);
     static void UnloadScripts();

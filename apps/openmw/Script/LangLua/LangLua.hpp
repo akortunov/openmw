@@ -39,6 +39,7 @@ public:
     static int CreateTimer(lua_State *lua) noexcept;
     static int CreateTimerEx(lua_State *lua);
 
+    virtual void LoadCommand(const char *command) override;
     virtual void LoadProgram(const char *filename) override;
     virtual int FreeProgram() override;
     virtual bool IsCallbackPresent(const char *name) override;

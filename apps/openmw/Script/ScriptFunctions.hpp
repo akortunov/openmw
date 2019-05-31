@@ -118,6 +118,8 @@ public:
     */
     static bool IsTimerElapsed(int timerId) noexcept { return false;};
 
+    static void MessageBox(const char *label, const char *buttons) noexcept;
+
 
     static constexpr ScriptFunctionData functions[]{
             {"CreateTimer",         ScriptFunctions::CreateTimer},
@@ -130,6 +132,8 @@ public:
             {"RestartTimer",        ScriptFunctions::RestartTimer},
             {"FreeTimer",           ScriptFunctions::FreeTimer},
             {"IsTimerElapsed",      ScriptFunctions::IsTimerElapsed},
+
+            {"MessageBox",          ScriptFunctions::MessageBox}
 
             /*
             ACTORAPI,
