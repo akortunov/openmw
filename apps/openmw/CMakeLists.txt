@@ -117,16 +117,16 @@ set(SWIG_MODULE_openmw_EXTRA_DEPS
 extensiontool
 ${BINDINGS_FILES})
 
-set(SWIG_MODULE_lua-openmw_EXTRA_DEPS
+set(SWIG_MODULE_liblua_openmw_EXTRA_DEPS
 extensiontool
 ${BINDINGS_FILES})
 
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/swig_interface.i PROPERTIES CPLUSPLUS ON)
 
-SWIG_ADD_LIBRARY(lua-openmw LANGUAGE lua TYPE MODULE SOURCES mwscript/bindings/swig_interface.i)#luaopen_openmw, everything up to and including the dash is removed
+SWIG_ADD_LIBRARY(liblua_openmw LANGUAGE lua TYPE MODULE SOURCES mwscript/bindings/swig_interface.i)#luaopen_openmw, everything up to and including the dash is removed
 SET_SOURCE_FILES_PROPERTIES(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings")
 
-INSTALL(TARGETS ${SWIG_MODULE_openmw_REAL_NAME} ${SWIG_MODULE_lua-openmw_REAL_NAME} DESTINATION ${OPENMW_EXTENSIONSDIR} )
+INSTALL(TARGETS ${SWIG_MODULE_openmw_REAL_NAME} ${SWIG_MODULE_liblua_openmw_REAL_NAME} DESTINATION ${OPENMW_EXTENSIONSDIR} )
 INSTALL(FILES
 ${CMAKE_SOURCE_DIR}/files/testing.lua
 ${CMAKE_BINARY_DIR}/openmw.py

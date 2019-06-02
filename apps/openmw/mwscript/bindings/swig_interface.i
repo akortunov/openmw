@@ -1,4 +1,4 @@
-%module openmw
+%module liblua_openmw
  %{
  /* Includes the header in the wrapper code */
  #include "extensionsbindings.hpp"

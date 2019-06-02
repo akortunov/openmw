@@ -82,7 +82,7 @@ namespace MWScript
                                 luaL_dostring(MWScriptExtensions::luaState, pathAppend.c_str());
                                 std::cout << pathAppend << "\n";
                             }
-                            assert(!luaL_dostring(MWScriptExtensions::luaState, "omw=require(\"liblua-openmw\")"));
+                            luaL_dostring(MWScriptExtensions::luaState, "omw = require(\"liblua_openmw\")");
                             //lua scripts are modules with run() function
                         }
                         std::string luaModuleName = scriptname.substr(0, scriptname.size()-4);
@@ -96,9 +96,10 @@ namespace MWScript
 
                         executeString = luaModuleName + ".run()";
 
-                        if(luaL_dostring(MWScriptExtensions::luaState, executeString.c_str() ))
+                        int rv = luaL_dostring(MWScriptExtensions::luaState, executeString.c_str());
+                        if(rv)
                         {
-                            std::cerr << "can't find run() in lua module: "<< luaModuleName << "\n";
+                            std::cerr << "error when executing module \""<< luaModuleName << "\": " << lua_tostring(MWScriptExtensions::luaState,-1) << std::endl;
                             return;
                         }
                     }

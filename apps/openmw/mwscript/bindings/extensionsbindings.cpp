@@ -2411,7 +2411,7 @@ namespace MWScriptExtensions
     }
     void externalscriptreturn()
     {
-        Interpreter::Type_Code codeword = 0xca000303;//codeword without arguments
+        Interpreter::Type_Code codeword = 0xca00030d;//codeword without arguments
         Compiler::Literals literals;
         std::vector<Interpreter::Type_Code> code;
         uint argCount = 0;
@@ -15360,7 +15360,7 @@ namespace MWScriptExtensions
     }
     void startexternalscript(std::string arg0)
     {
-        Interpreter::Type_Code codeword = 0xca000302;//codeword without arguments
+        Interpreter::Type_Code codeword = 0xca00030c;//codeword without arguments
         Compiler::Literals literals;
         std::vector<Interpreter::Type_Code> code;
         uint argCount = 1;

@@ -149,8 +149,8 @@ namespace Compiler
 
     namespace ExternalScript
     {
-        const int opcodeStartExternalScript = 0x2000302;
-        const int opcodeExternalScriptReturn = 0x2000303;
+        const int opcodeStartExternalScript = 0x200030c;
+        const int opcodeExternalScriptReturn = 0x200030d;
     }
 
     namespace Dialogue
