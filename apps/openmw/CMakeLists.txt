@@ -51,7 +51,7 @@ add_openmw_dir (mwscript
     locals scriptmanagerimp compilercontext interpretercontext cellextensions miscextensions
     guiextensions soundextensions skyextensions statsextensions containerextensions
     aiextensions controlextensions extensions globalscripts ref dialogueextensions
-    animationextensions transformationextensions consoleextensions userextensions
+    animationextensions transformationextensions consoleextensions userextensions externalscriptextensions
     )
 
 add_openmw_dir (mwsound
@@ -95,6 +95,47 @@ add_openmw_dir (mwbase
     inputmanager windowmanager statemanager
     )
 
+#SWIG stuff
+FIND_PACKAGE(SWIG REQUIRED)
+INCLUDE(${SWIG_USE_FILE})
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mwscript/bindings)
+
+ADD_CUSTOM_COMMAND(OUTPUT
+    ${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/extensionsbindings.hpp ${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/extensionsbindings.cpp
+    COMMAND extensiontool ${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/
+    DEPENDS extensiontool)
+
+set(BINDINGS_FILES
+${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/extensionsbindings.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/extensionsbindings0.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/bindingsvars.cpp)
+
+set(CMAKE_SWIG_OUTDIR ${CMAKE_BINARY_DIR})
+
+set(SWIG_MODULE_openmw_EXTRA_DEPS
+extensiontool
+${BINDINGS_FILES})
+
+set(SWIG_MODULE_lua-openmw_EXTRA_DEPS
+extensiontool
+${BINDINGS_FILES})
+
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings/swig_interface.i PROPERTIES CPLUSPLUS ON)
+
+SWIG_ADD_LIBRARY(lua-openmw LANGUAGE lua TYPE MODULE SOURCES mwscript/bindings/swig_interface.i)#luaopen_openmw, everything up to and including the dash is removed
+SET_SOURCE_FILES_PROPERTIES(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/mwscript/bindings")
+
+INSTALL(TARGETS ${SWIG_MODULE_openmw_REAL_NAME} ${SWIG_MODULE_lua-openmw_REAL_NAME} DESTINATION ${OPENMW_EXTENSIONSDIR} )
+INSTALL(FILES
+${CMAKE_SOURCE_DIR}/files/testing.lua
+${CMAKE_BINARY_DIR}/openmw.py
+DESTINATION ${OPENMW_EXTENSIONSDIR} )
+FILE(COPY
+${CMAKE_SOURCE_DIR}/files/testing.lua
+DESTINATION ${CMAKE_BINARY_DIR} )
+#END SWIG STUFF
+
 # Main executable
 
 if (NOT ANDROID)
@@ -102,6 +143,7 @@ if (NOT ANDROID)
         ${OPENMW_FILES}
         ${GAME} ${GAME_HEADER}
         ${APPLE_BUNDLE_RESOURCES}
+        ${BINDINGS_FILES}
     )
 else ()
     add_library(openmw
@@ -116,6 +158,8 @@ endif ()
 include_directories(
     ${FFmpeg_INCLUDE_DIRS}
 )
+
+target_link_libraries(openmw  ${LuaJit_LIBRARIES})
 
 target_link_libraries(openmw
     ${OSG_LIBRARIES}

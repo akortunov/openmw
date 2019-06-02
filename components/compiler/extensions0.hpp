@@ -27,6 +27,11 @@ namespace Compiler
         void registerExtensions (Extensions& extensions);
     }
 
+    namespace ExternalScript
+    {
+        void registerExtensions (Extensions& extensions);
+    }
+
     namespace Container
     {
         void registerExtensions (Extensions& extensions);

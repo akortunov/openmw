@@ -439,6 +439,8 @@ endif (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clan
 IF(NOT WIN32 AND NOT APPLE)
     # Linux installation
 
+    SET(OPENMW_EXTENSIONSDIR "${LIBDIR}/games/openmw" CACHE PATH "Where to install scripting extensions")
+
     # Install binaries
     IF(BUILD_OPENMW)
         INSTALL(PROGRAMS "${OpenMW_BINARY_DIR}/openmw" DESTINATION "${BINDIR}" )
@@ -615,9 +617,17 @@ endif()
 # Components
 add_subdirectory (components)
 
+find_package(LuaJit REQUIRED)
+
+MESSAGE(STATUS "Found LuaJit_LIBRARIES: ${LuaJit_LIBRARIES}")
+MESSAGE(STATUS "Found LuaJit_INCLUDE_DIRS: ${LuaJit_INCLUDE_DIRS}")
+
+include_directories(SYSTEM ${LuaJit_INCLUDE_DIRS})
+
 # Apps and tools
 if (BUILD_OPENMW)
     add_subdirectory( apps/openmw )
+    add_subdirectory( apps/extensiontool )
 endif()
 
 if (BUILD_BSATOOL)

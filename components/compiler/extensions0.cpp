@@ -14,6 +14,7 @@ namespace Compiler
         Control::registerExtensions (extensions);
         Dialogue::registerExtensions (extensions);
         Gui::registerExtensions (extensions);
+        ExternalScript::registerExtensions (extensions);
         Misc::registerExtensions (extensions);
         Sky::registerExtensions (extensions);
         Sound::registerExtensions (extensions);
@@ -71,6 +72,15 @@ namespace Compiler
             extensions.registerFunction ("getlos", 'l', "c", opcodeGetLineOfSight, opcodeGetLineOfSightExplicit);
             extensions.registerFunction("gettarget", 'l', "c", opcodeGetTarget, opcodeGetTargetExplicit);
             extensions.registerInstruction("face", "ffX", opcodeFace, opcodeFaceExplicit);
+        }
+    }
+
+    namespace ExternalScript
+    {
+        void registerExtensions (Extensions& extensions)
+        {
+            extensions.registerInstruction ("startexternalscript", "S", opcodeStartExternalScript);
+            extensions.registerInstruction ("externalscriptreturn", "", opcodeExternalScriptReturn);
         }
     }
 

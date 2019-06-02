@@ -10,6 +10,7 @@
 #include "skyextensions.hpp"
 #include "statsextensions.hpp"
 #include "containerextensions.hpp"
+#include "externalscriptextensions.hpp"
 #include "aiextensions.hpp"
 #include "controlextensions.hpp"
 #include "dialogueextensions.hpp"
@@ -30,6 +31,7 @@ namespace MWScript
         Sky::installOpcodes (interpreter);
         Stats::installOpcodes (interpreter);
         Container::installOpcodes (interpreter);
+        ExternalScript::installOpcodes (interpreter);
         Ai::installOpcodes (interpreter);
         Control::installOpcodes (interpreter);
         Dialogue::installOpcodes (interpreter);

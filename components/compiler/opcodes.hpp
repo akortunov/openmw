@@ -147,6 +147,12 @@ namespace Compiler
         const int opcodeGetForceMoveJumpExplicit = 0x2000263;
     }
 
+    namespace ExternalScript
+    {
+        const int opcodeStartExternalScript = 0x2000302;
+        const int opcodeExternalScriptReturn = 0x2000303;
+    }
+
     namespace Dialogue
     {
         const int opcodeJournal = 0x2000133;
