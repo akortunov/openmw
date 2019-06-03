@@ -140,7 +140,7 @@ if(BUILD_WITH_LUA)
 
     source_group(game FILES ${LUA} ${LUA_HEADER})
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_LUA")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_LUA -ldl")
     include_directories(SYSTEM ${LuaJit_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/extern/LuaBridge)
 
     if (NOT ANDROID)

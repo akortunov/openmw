@@ -1,5 +1,7 @@
 #include "container.hpp"
 
+#include "../Script/Script.hpp"
+
 #include <components/esm/loadcont.hpp>
 #include <components/esm/containerstate.hpp>
 
@@ -194,6 +196,8 @@ namespace MWClass
 
         if (!isLocked || hasKey)
         {
+            Script::Call<Script::CallbackIdentity("OnContainer")>((unsigned short) 0, ptr.getCellRef().getRefId().c_str());
+
             if(!isTrapped)
             {
                 if (canBeHarvested(ptr))
