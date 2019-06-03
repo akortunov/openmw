@@ -124,17 +124,18 @@ if(BUILD_WITH_LUA)
         #Script/Functions/GUI.cpp Script/Functions/Items.cpp Script/Functions/Mechanics.cpp
         #Script/Functions/Positions.cpp Script/Functions/Quests.cpp Script/Functions/RecordsDynamic.cpp
         #Script/Functions/Server.cpp Script/Functions/Settings.cpp Script/Functions/Shapeshift.cpp
-        #Script/Functions/Spells.cpp Script/Functions/Stats.cpp Script/Functions/Timer.cpp
+        #Script/Functions/Spells.cpp Script/Functions/Stats.cpp
+        Script/Functions/Timer.cpp
 
         Script/API/PublicFnAPI.cpp
-        #Script/API/TimerAPI.cpp
+        Script/API/TimerAPI.cpp
             ${LuaScript_Sources}
     )
 
     set(LUA_HEADER
         Script/Types.hpp Script/Script.hpp Script/SystemInterface.hpp Script/Utils.hpp Script/Utils2.hpp
         Script/ScriptFunction.hpp Script/Platform.hpp Script/Language.hpp
-        Script/ScriptFunctions.hpp  Script/API/PublicFnAPI.hpp #Script/API/TimerAPI.hpp
+        Script/ScriptFunctions.hpp  Script/API/PublicFnAPI.hpp Script/API/TimerAPI.hpp
         ${LuaScript_Headers}
     )
 

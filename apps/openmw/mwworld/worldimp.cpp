@@ -1,5 +1,7 @@
 #include "worldimp.hpp"
 
+#include "../Script/API/TimerAPI.hpp"
+
 #include <osg/Group>
 #include <osg/ComputeBoundsVisitor>
 
@@ -1833,6 +1835,8 @@ namespace MWWorld
             mSpellPreloadTimer = 0.1f;
             preloadSpells();
         }
+
+        mwmp::TimerAPI::Tick();
     }
 
     void World::updatePhysics (float duration, bool paused)

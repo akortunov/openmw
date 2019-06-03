@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "LangLua.hpp"
-//#include <Script/API/TimerAPI.hpp>
+#include "../API/TimerAPI.hpp"
 #include "../API/PublicFnAPI.hpp"
 
 using namespace std;
@@ -110,7 +110,7 @@ int LangLua::CreateTimer(lua_State *lua) noexcept
     const char * callback= luabridge::Stack<const char*>::get(lua, 1);
     int msec = luabridge::Stack<int>::get(lua, 2);
 
-    int id = 0;//mwmp::TimerAPI::CreateTimerLua(lua, callback, msec, "", vector<boost::any>());
+    int id = mwmp::TimerAPI::CreateTimerLua(lua, callback, msec, "", vector<boost::any>());
     luabridge::push(lua, id);
     return 1;
 }
@@ -176,7 +176,7 @@ int LangLua::CreateTimerEx(lua_State *lua)
     }
 
 
-    int id = 0;//mwmp::TimerAPI::CreateTimerLua(lua, callback, msec, types, args);
+    int id = mwmp::TimerAPI::CreateTimerLua(lua, callback, msec, types, args);
     luabridge::push(lua, id);
     return 1;
 }

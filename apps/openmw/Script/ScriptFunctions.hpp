@@ -59,7 +59,7 @@ public:
      * \param msec The interval in miliseconds.
      * \return The ID of the timer thus created.
      */
-    static int CreateTimer(ScriptFunc callback, int msec) noexcept {return -1;};
+    static int CreateTimer(ScriptFunc callback, int msec) noexcept;
 
     /**
     * \brief Create a timer that will run a script function after a certain interval and pass
@@ -75,7 +75,7 @@ public:
     * \param args The arguments.
     * \return The ID of the timer thus created.
     */
-    static int CreateTimerEx(ScriptFunc callback, int msec, const char *types, va_list args) {return -1;};
+    static int CreateTimerEx(ScriptFunc callback, int msec, const char *types, va_list args) noexcept;
 
     /**
     * \brief Start the timer with a certain ID.
@@ -83,7 +83,7 @@ public:
     * \param timerId The timer ID.
     * \return void
     */
-    static void StartTimer(int timerId) noexcept {};
+    static void StartTimer(int timerId) noexcept;
 
     /**
     * \brief Stop the timer with a certain ID.
@@ -91,7 +91,7 @@ public:
     * \param timerId The timer ID.
     * \return void
     */
-    static void StopTimer(int timerId) noexcept {};
+    static void StopTimer(int timerId) noexcept;
 
     /**
     * \brief Restart the timer with a certain ID for a certain interval.
@@ -100,7 +100,7 @@ public:
     * \param msec The interval in miliseconds.
     * \return void
     */
-    static void RestartTimer(int timerId, int msec) noexcept {};
+    static void RestartTimer(int timerId, int msec) noexcept;
 
     /**
     * \brief Free the timer with a certain ID.
@@ -108,7 +108,7 @@ public:
     * \param timerId The timer ID.
     * \return void
     */
-    static void FreeTimer(int timerId) noexcept {};
+    static void FreeTimer(int timerId) noexcept;
 
     /**
     * \brief Check whether a timer is elapsed.
@@ -116,7 +116,7 @@ public:
     * \param timerId The timer ID.
     * \return Whether the timer is elapsed.
     */
-    static bool IsTimerElapsed(int timerId) noexcept { return false;};
+    static bool IsTimerElapsed(int timerId) noexcept;
 
     static void MessageBox(const char *label, const char *buttons) noexcept;
 
