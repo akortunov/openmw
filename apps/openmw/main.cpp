@@ -256,10 +256,10 @@ int runApplication(int argc, char *argv[])
     std::unique_ptr<OMW::Engine> engine;
     engine.reset(new OMW::Engine(cfgMgr));
 
+#ifdef ENABLE_LUA
     std::vector<std::string> plugins = { "helloWorld.lua"};
 
     std::string pluginHome = ".";
-#ifdef ENABLE_LUA
     LangLua::AddPackagePath(Utils::convertPath(pluginHome + "/scripts/?.lua" + ";"
         + pluginHome + "/lib/lua/?.lua" + ";"));
 #ifdef _WIN32
