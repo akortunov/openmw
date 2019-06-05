@@ -262,11 +262,6 @@ int runApplication(int argc, char *argv[])
     std::string pluginHome = ".";
     LangLua::AddPackagePath(Utils::convertPath(pluginHome + "/scripts/?.lua" + ";"
         + pluginHome + "/lib/lua/?.lua" + ";"));
-#ifdef _WIN32
-    LangLua::AddPackageCPath(Utils::convertPath(pluginHome + "/lib/?.dll"));
-#else
-    LangLua::AddPackageCPath(Utils::convertPath(pluginHome + "/lib/?.so"));
-#endif
 
     for (auto plugin : plugins)
         Script::LoadScript(plugin.c_str(), pluginHome.c_str());
