@@ -608,7 +608,7 @@ namespace MWPhysics
 
         if (mDebugDrawEnabled && !mDebugDrawer.get())
         {
-            mDebugDrawer.reset(new MWRender::DebugDrawer(mParentNode, mCollisionWorld));
+            mDebugDrawer.reset(new MWRender::DebugDrawer(mParentNode, mCollisionWorld, mResourceSystem));
             mCollisionWorld->setDebugDrawer(mDebugDrawer.get());
             mDebugDrawer->setDebugMode(mDebugDrawEnabled);
         }

@@ -148,13 +148,14 @@ float frustumDepth;
 
 float linearizeDepth(float depth)
   {
-    float z_n = 2.0 * depth - 1.0;
-    depth = 2.0 * near * far / (far + near - z_n * frustumDepth);
+    depth = exp(depth*log(1000000000.0+1.0)) - 1;
     return depth;
   }
 
 void main(void)
 {
+    gl_FragDepth = (log(gl_FragCoord.z/gl_FragCoord.w + 1.0) / log(1000000000.0 + 1.0));
+
     frustumDepth = abs(far - near);
     vec3 worldPos = position.xyz + nodePosition.xyz;
     vec2 UV = worldPos.xy / (8192.0*5.0) * 3.0;
@@ -211,9 +212,9 @@ void main(void)
 #endif
     vec2 screenCoordsOffset = normal.xy * REFL_BUMP;
 #if REFRACTION
-    float depthSample = linearizeDepth(texture2D(refractionDepthMap,screenCoords).x) * radialize;
-    float depthSampleDistorted = linearizeDepth(texture2D(refractionDepthMap,screenCoords-screenCoordsOffset).x) * radialize;
-    float surfaceDepth = linearizeDepth(gl_FragCoord.z) * radialize;
+    float depthSample = linearizeDepth(texture2D(refractionDepthMap,screenCoords).x);
+    float depthSampleDistorted = linearizeDepth(texture2D(refractionDepthMap,screenCoords-(normal.xy*REFR_BUMP)).x);
+    float surfaceDepth = linearizeDepth(gl_FragDepth) * radialize;
     float realWaterDepth = depthSample - surfaceDepth;  // undistorted water depth in view direction, independent of frustum
     screenCoordsOffset *= clamp(realWaterDepth / BUMP_SUPPRESS_DEPTH,0,1);
 #endif
