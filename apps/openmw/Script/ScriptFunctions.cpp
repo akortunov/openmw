@@ -58,9 +58,33 @@ void ScriptFunctions::MessageBox(const char *label, const char *buttons) noexcep
     MWBase::Environment::get().getWindowManager()->interactiveMessageBox(label, buttonLabels);
 }
 
+void ScriptFunctions::SetGMST(const char *name, double value) noexcept
+{
+    MWWorld::Store<ESM::GameSetting> *gmst = const_cast<MWWorld::Store<ESM::GameSetting>*>(&MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>());
+    ESM::GameSetting* gmstValue = const_cast<ESM::GameSetting*>(gmst->search(name));
+    if (gmstValue == nullptr)
+    {
+        ESM::GameSetting newGmst;
+        newGmst.mId = name;
+        if (name[0] == 'f')
+            newGmst.mValue = (float)value;
+        if (name[0] == 'i')
+            newGmst.mValue = (int)value;
+
+        gmst->insertStatic(newGmst);
+        return;
+    }
+
+    if (name[0] == 'f')
+        gmstValue->mValue = (float)value;
+    if (name[0] == 'i')
+        gmstValue->mValue = (int)value;
+}
+
 double ScriptFunctions::GetGMST(const char *name) noexcept
 {
     const MWWorld::Store<ESM::GameSetting> &gmst = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>();
+
     if (name[0] == 'f')
         return gmst.find(name)->mValue.getFloat();
     if (name[0] == 'i')

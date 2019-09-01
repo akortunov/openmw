@@ -119,6 +119,7 @@ public:
     static bool IsTimerElapsed(int timerId) noexcept;
 
     static void MessageBox(const char *label, const char *buttons) noexcept;
+    static void SetGMST(const char *name, double value) noexcept;
 
     static double GetGMST(const char *name) noexcept;
 
@@ -137,7 +138,8 @@ public:
 
             // TODO: split to separate files
             {"MessageBox",          ScriptFunctions::MessageBox},
-            {"GetGMST",             ScriptFunctions::GetGMST}
+            {"GetGMST",             ScriptFunctions::GetGMST},
+            {"SetGMST",             ScriptFunctions::SetGMST}
 
             /*
             ACTORAPI,
