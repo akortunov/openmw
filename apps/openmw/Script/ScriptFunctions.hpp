@@ -1,6 +1,8 @@
 #ifndef SCRIPTFUNCTIONS_HPP
 #define SCRIPTFUNCTIONS_HPP
 
+#include "Functions/Debug.hpp"
+
 /*
 #include <Script/Functions/Actors.hpp>
 #include <Script/Functions/Books.hpp>
@@ -139,7 +141,9 @@ public:
             // TODO: split to separate files
             {"MessageBox",          ScriptFunctions::MessageBox},
             {"GetGMST",             ScriptFunctions::GetGMST},
-            {"SetGMST",             ScriptFunctions::SetGMST}
+            {"SetGMST",             ScriptFunctions::SetGMST},
+
+            DEBUGAPI
 
             /*
             ACTORAPI,

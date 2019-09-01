@@ -125,6 +125,7 @@ if(BUILD_WITH_LUA)
         #Script/Functions/Positions.cpp Script/Functions/Quests.cpp Script/Functions/RecordsDynamic.cpp
         #Script/Functions/Server.cpp Script/Functions/Settings.cpp Script/Functions/Shapeshift.cpp
         #Script/Functions/Spells.cpp Script/Functions/Stats.cpp
+        Script/Functions/Debug.cpp
         Script/Functions/Timer.cpp
 
         Script/API/PublicFnAPI.cpp
