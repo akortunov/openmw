@@ -5,6 +5,9 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
+
+#include "../mwworld/esmstore.hpp"
 
 //#include <apps/openmw-mp/Player.hpp>
 ////#include <apps/openmw-mp/Networking.hpp>
@@ -53,4 +56,17 @@ void ScriptFunctions::MessageBox(const char *label, const char *buttons) noexcep
     std::vector<std::string> buttonLabels = splitString(buttons);
 
     MWBase::Environment::get().getWindowManager()->interactiveMessageBox(label, buttonLabels);
+}
+
+double ScriptFunctions::GetGMST(const char *name) noexcept
+{
+    const MWWorld::Store<ESM::GameSetting> &gmst = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>();
+    if (name[0] == 'f')
+        return gmst.find(name)->mValue.getFloat();
+    if (name[0] == 'i')
+        return gmst.find(name)->mValue.getInteger();
+
+    // FIXME: TESMP seems to do not support variance return types
+    return 0;
+    //return gmst.find(name)->mValue.getString();
 }

@@ -120,6 +120,8 @@ public:
 
     static void MessageBox(const char *label, const char *buttons) noexcept;
 
+    static double GetGMST(const char *name) noexcept;
+
 
     static constexpr ScriptFunctionData functions[]{
             {"CreateTimer",         ScriptFunctions::CreateTimer},
@@ -133,7 +135,9 @@ public:
             {"FreeTimer",           ScriptFunctions::FreeTimer},
             {"IsTimerElapsed",      ScriptFunctions::IsTimerElapsed},
 
-            {"MessageBox",          ScriptFunctions::MessageBox}
+            // TODO: split to separate files
+            {"MessageBox",          ScriptFunctions::MessageBox},
+            {"GetGMST",             ScriptFunctions::GetGMST}
 
             /*
             ACTORAPI,
