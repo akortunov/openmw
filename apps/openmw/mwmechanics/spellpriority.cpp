@@ -517,15 +517,16 @@ namespace MWMechanics
             {
                 if (effect.mAttribute >= 0 && effect.mAttribute < ESM::Attribute::Length)
                 {
-                    const float attributePriorities[ESM::Attribute::Length] = {
+                    static const float attributePriorities[ESM::Attribute::Length] =
+                    {
                         1.0f, // Strength
-                        0.5f, // Intelligence
+                        0.7f, // Intelligence
                         0.6f, // Willpower
                         0.7f, // Agility
                         0.5f, // Speed
                         0.8f, // Endurance
-                        0.7f, // Personality
-                        0.3f // Luck
+                        0.3f, // Personality
+                        0.3f  // Luck
                     };
                     rating *= attributePriorities[effect.mAttribute];
                 }
@@ -538,6 +539,101 @@ namespace MWMechanics
                 return 0.f;
             if (enemy.getClass().getSkill(enemy, effect.mSkill) <= 0)
                 return 0.f;
+
+            if (effect.mSkill >= 0 && effect.mSkill < ESM::Skill::Length)
+            {
+                switch (effect.mSkill)
+                {
+                    case ESM::Skill::Armorer:
+                    case ESM::Skill::Athletics:
+                    case ESM::Skill::Alchemy:
+                    case ESM::Skill::Security:
+                    case ESM::Skill::Sneak:
+                    case ESM::Skill::Acrobatics:
+                    case ESM::Skill::Mercantile:
+                    case ESM::Skill::Speechcraft:
+                    {
+                        // Some skills do not affect combat at all. There is no point to damage them.
+                        return 0.f;
+                    }
+                    case ESM::Skill::Enchant:
+                    case ESM::Skill::Alteration:
+                    case ESM::Skill::Illusion:
+                    case ESM::Skill::Conjuration:
+                    case ESM::Skill::Mysticism:
+                    case ESM::Skill::Restoration:
+                    {
+                        // It is unclear how to handle magic skills effectively.
+                        // Forbid to damage them, excepts of Destruction as a primary combat skill for mages.
+                        return 0.f;
+                    }
+                    case ESM::Skill::Block:
+                    {
+                        // There is no point to decrease blocking skill, if the target has no shield prepared.
+                        if (!MWBase::Environment::get().getMechanicsManager()->isReadyToBlock(enemy))
+                            return 0.f;
+
+                        break;
+                    }
+                    case ESM::Skill::BluntWeapon:
+                    case ESM::Skill::ShortBlade:
+                    case ESM::Skill::LongBlade:
+                    case ESM::Skill::Axe:
+                    case ESM::Skill::Spear:
+                    case ESM::Skill::Marksman:
+                    case ESM::Skill::HandToHand:
+                    {
+                        // There is no point to decrease weapon skill, if related weapon is not equipped.
+                        MWWorld::InventoryStore& inv = enemy.getClass().getInventoryStore(enemy);
+                        MWWorld::ConstContainerStoreIterator weapon = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                        int enemyWeaponSkill = ESM::Skill::HandToHand;
+                        if (weapon != inv.end() && weapon.getType() == MWWorld::ContainerStore::Type_Weapon)
+                            enemyWeaponSkill = weapon->getClass().getEquipmentSkill(*weapon);
+
+                        if (enemyWeaponSkill != effect.mSkill)
+                            return 0.f;
+
+                        break;
+                    }
+                    case ESM::Skill::LightArmor:
+                    case ESM::Skill::MediumArmor:
+                    case ESM::Skill::HeavyArmor:
+                    case ESM::Skill::Unarmored:
+                    {
+                        MWWorld::InventoryStore& inv = enemy.getClass().getInventoryStore(enemy);
+
+                        bool useSkill = false;
+                        for(int i = 0; i < MWWorld::InventoryStore::Slots; i++)
+                        {
+                            MWWorld::ConstContainerStoreIterator it = inv.getSlot(i);
+                            if (it == inv.end() || it->getTypeName() != typeid(ESM::Armor).name())
+                            {
+                                if (effect.mSkill == ESM::Skill::Unarmored)
+                                {
+                                    useSkill = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                int armorSkill = it->getClass().getEquipmentSkill(*it);
+                                if (armorSkill == effect.mSkill)
+                                {
+                                    useSkill = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // There is no point to decrease armor skill, if target does not use armor of such type.
+                        if (!useSkill)
+                            return 0.f;
+
+                        break;
+                    }
+                }
+            }
+
             break;
 
         default:
