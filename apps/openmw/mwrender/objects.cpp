@@ -95,11 +95,13 @@ void Objects::insertDistantModel(const MWWorld::Ptr& ptr)
         return;
 
     model = Misc::ResourceHelpers::correctDistantModelPath(model, mResourceSystem->getVFS());
-
     const osg::Node* templ = mResourceSystem->getSceneManager()->getTemplate(model);
-    const osg::BoundingSphere& bs = templ->getBound();
-    if (bs.radius2() * 4 < mDistantCullingSize * mDistantCullingSize)
-        return;
+    if (model.find("icelayer") == std::string::npos && model.find("lava") == std::string::npos)
+    {
+        const osg::BoundingSphere& bs = templ->getBound();
+        if (bs.radius2() * 4 < mDistantCullingSize * mDistantCullingSize)
+            return;
+    }
 
     osg::ref_ptr<osg::Group> cellnode;
 
