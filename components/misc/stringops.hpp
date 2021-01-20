@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 
+#include <boost/format.hpp>
+
 #include "utf8stream.hpp"
 
 namespace Misc
@@ -232,13 +234,7 @@ public:
     template <typename ... Args>
     static std::string format(const char* fmt, Args const & ... args)
     {
-        auto size = std::snprintf(nullptr, 0, fmt, argument(args) ...);
-        // Note: sprintf also writes a trailing null character. We should remove it.
-        std::string ret(size+1, '\0');
-        std::sprintf(&ret[0], fmt, argument(args) ...);
-        ret.erase(size);
-
-        return ret;
+        return boost::str((boost::format(fmt) % ... % args));
     }
 
     template <typename ... Args>
