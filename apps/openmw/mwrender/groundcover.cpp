@@ -1,7 +1,6 @@
 #include "groundcover.hpp"
 
 #include <osg/Geometry>
-#include <osg/VertexAttribDivisor>
 
 #include <components/esm/esmreader.hpp>
 
@@ -66,12 +65,7 @@ namespace MWRender
 
         void apply(osg::Node& node) override
         {
-            osg::ref_ptr<osg::StateSet> ss = node.getStateSet();
-            if (ss != nullptr)
-            {
-                ss->removeAttribute(osg::StateAttribute::MATERIAL);
-                removeAlpha(ss);
-            }
+            prepareStateset(node);
 
             traverse(node);
         }
@@ -112,12 +106,7 @@ namespace MWRender
             geom.setVertexAttribArray(6, transforms.get(), osg::Array::BIND_PER_VERTEX);
             geom.setVertexAttribArray(7, rotations.get(), osg::Array::BIND_PER_VERTEX);
 
-            osg::ref_ptr<osg::StateSet> ss = geom.getOrCreateStateSet();
-            ss->setAttribute(new osg::VertexAttribDivisor(6, 1));
-            ss->setAttribute(new osg::VertexAttribDivisor(7, 1));
-
-            ss->removeAttribute(osg::StateAttribute::MATERIAL);
-            removeAlpha(ss);
+            prepareStateset(geom);
 
             traverse(geom);
         }
@@ -125,8 +114,14 @@ namespace MWRender
         std::vector<Groundcover::GroundcoverEntry> mInstances;
         osg::Vec3f mChunkPosition;
 
-        void removeAlpha(osg::StateSet* stateset)
+        void prepareStateset(osg::Node& node)
         {
+            osg::ref_ptr<osg::StateSet> stateset = node.getStateSet();
+            if (stateset == nullptr)
+                return;
+
+            stateset->removeAttribute(osg::StateAttribute::MATERIAL);
+
             // MGE uses default alpha settings for groundcover, so we can not rely on alpha properties
             stateset->removeAttribute(osg::StateAttribute::ALPHAFUNC);
             stateset->removeMode(GL_ALPHA_TEST);

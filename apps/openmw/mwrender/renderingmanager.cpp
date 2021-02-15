@@ -12,6 +12,7 @@
 #include <osg/Group>
 #include <osg/UserDataContainer>
 #include <osg/ComputeBoundsVisitor>
+#include <osg/VertexAttribDivisor>
 
 #include <osgUtil/LineSegmentIntersector>
 
@@ -313,6 +314,9 @@ namespace MWRender
             // Force a unified alpha handling instead of data from meshes
             osg::ref_ptr<osg::AlphaFunc> alpha = new osg::AlphaFunc(osg::AlphaFunc::GEQUAL, 128.f/255.f);
             groundcoverRoot->getOrCreateStateSet()->setAttributeAndModes(alpha.get(), osg::StateAttribute::ON);
+
+            groundcoverRoot->getOrCreateStateSet()->setAttribute(new osg::VertexAttribDivisor(6, 1));
+            groundcoverRoot->getOrCreateStateSet()->setAttribute(new osg::VertexAttribDivisor(7, 1));
 
             mGroundcoverUpdater = new GroundcoverUpdater;
             groundcoverRoot->addUpdateCallback(mGroundcoverUpdater);
