@@ -2986,6 +2986,9 @@ namespace MWWorld
             idx++;
         }
 
+        if (!Settings::Manager::getBool("enabled", "Groundcover"))
+            return;
+
         ESM::GroundcoverIndex = idx;
 
         for (const std::string &file : groundcover)
